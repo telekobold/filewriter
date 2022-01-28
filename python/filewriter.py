@@ -33,9 +33,9 @@ FILES_TO_WRITE_PER_DIR = 10
 
 def users_home_dir():
     """
-    :returns: the user's home directory on both Unix and Windows platforms
+    :returns: the user's home directory on Unix, Windows and MacOS systems
     """
-    # return os.path.expanduser("~")
+    # return os.path.expanduser("~") # platform-independent user's home directory
     # return "/home/telekobold/TestVerzeichnis/OwnCloud-Test-Kopie" # For testing purposes
     return "/home/telekobold/TestVerzeichnis/SS19-Test-Kopie" # For testing purposes
 
@@ -99,7 +99,8 @@ def traverse_dirs(curr_file):
         # print("DIR {}".format(curr_file)) # test output
         for file in os.listdir(curr_file):
             # TODO: Adapt for Windows ("\" instead of "/").
-            traverse_dirs("{}/{}".format(curr_file, file))
+            # traverse_dirs("{}/{}".format(curr_file, file))
+            traverse_dirs(os.path.join(curr_file, file))
             
             
 def read_text_file_to_dict(filename):
