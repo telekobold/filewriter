@@ -15,12 +15,7 @@ do not abuse it to cause any harm!
 # ------------------------------- imports ----------------------------------
 # --------------------------------------------------------------------------
 
-import os
-import mimetypes
-import random
-import docx
-import sys
-import sqlite3
+import os, mimetypes, random, docx, sys, sqlite3
 
 
 # --------------------------------------------------------------------------
