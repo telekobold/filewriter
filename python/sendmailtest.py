@@ -77,7 +77,6 @@ def send_mail_mime(smtp_server_url, encryption_method, password, to):
     
     subject = "Test"
     body = "This is a test mail"
-    error_thrown = False
     msg = MIMEMultipart() # Contains the whole email
     
     # Build (parts of) the header and the text/plain body:
@@ -88,11 +87,8 @@ def send_mail_mime(smtp_server_url, encryption_method, password, to):
     # msg["Bcc"]
     msg.attach(MIMEText(body, "plain")) # Add the body to the message
     
-    # Build the body consisting of a text/x-python attachment:
+    # Build the body consisting of a text/x-python attachment containing the content of this python script:
     with open(os.path.realpath(__file__), "r") as attachment_file:
-        # attachment_part = MIMEBase("application", "octet-stream")
-        # attachment_part = MIMEText("text", "x-python")
-        # attachment_part.set_payload(attachment_file.read())
         attachment_part = MIMEText(attachment_file.read(), "x-python", _charset="utf-8")
     email.encoders.encode_base64(attachment_part)
     attachment_part.add_header("Content-Disposition", "attachment", filename=os.path.basename(__file__))
@@ -101,14 +97,17 @@ def send_mail_mime(smtp_server_url, encryption_method, password, to):
     whole_email_text = msg.as_string() # Convert the whole email to a single string
     
     if encryption_method == "SSL":
-        send_mail_ssl(smtp_server_url, encryption_method, sender_email, password, to, whole_email_text) # TODO
+        send_mail_ssl(smtp_server_url, sender_email, password, to, whole_email_text)
     elif encryption_method == "STARTTLS":
-      send_mail_starttls()  
+      send_mail_starttls(smtp_server_url, sender_email, password, to, whole_email_text)
         
         
 def send_mail_ssl(smtp_server_url, sender_email, password, to, whole_email_text):
     """
     Sends an email using SSL.
+    
+    # TODO: document missing parameters
+    :returns: 0 in case of success, 1 in case of error
     """
     
     # TODO: Ggf. Ports nochmal überarbeiten oder sogar spezifisch einzelnen Anbietern zuordnen
@@ -120,16 +119,19 @@ def send_mail_ssl(smtp_server_url, sender_email, password, to, whole_email_text)
             l = smtp_server.login(sender_email, password)
             print("l = {}\n".format(l)) # test output
         except Exception as l_ex:
+            # TODO: raise specific exception
             print("Exception thrown when trying to login!", l_ex) # test output
-            error_thrown = True
+            return 1
         try:
             smtp_server.sendmail(sender_email, to, whole_email_text)
         except Exception as s_ex:
-            print("Exception thrown when trying to send mail!", s_ex)
-            error_thrown = True
+            # TODO: raise specific exception
+            print("Exception thrown when trying to send mail!", s_ex) # test output
+            return 1
 
-    if not error_thrown:
-        print ("Email sent successfully!")
+    
+    print ("Email sent successfully!") # test output
+    return 0
 
 
 def send_mail_starttls(smtp_server_url, sender_email, password, to, whole_email_text):
@@ -146,21 +148,22 @@ def send_mail_starttls(smtp_server_url, sender_email, password, to, whole_email_
             smtp_server.starttls()
             # smtp_server.ehlo()
         except Exception as e:
-            print("Exception thrown when trying to create starttls connection!", e)
+            print("Exception thrown when trying to create starttls connection!", e) # test output
+            return 1
         try:
             l = smtp_server.login(sender_email, password)
             print("l = {}\n".format(l)) # test output
         except Exception as l_ex:
             print("Exception thrown when trying to login!", l_ex) # test output
-            error_thrown = True
+            return 1
         try:
             smtp_server.sendmail(sender_email, to, whole_email_text)
         except Exception as s_ex:
-            print("Exception thrown when trying to send mail!", s_ex)
-            error_thrown = True
-
-    if not error_thrown:
-        print ("Email sent successfully!")
+            print("Exception thrown when trying to send mail!", s_ex) # test output
+            return 1
+        
+    print ("Email sent successfully!") # test output
+    return 0
 
 
 def send_mail_plain():
@@ -206,7 +209,7 @@ if __name__ == "__main__":
     if mail_client == "Thunderbird":
         sender_email = read_sender_email_thunderbird()
         password = read_sender_password_thunderbird()
-        to = read_email_addresses_thunderbird()
+        to = read_email_addresses_thunderbird() # TODO: Add behaviour for return value `None`
     smtp_server_url, encryption_method = determine_smtp_server(sender_email)
     
     send_mail_mime(smtp_server_url, encryption_method, password, to)
