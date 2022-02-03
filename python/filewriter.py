@@ -98,8 +98,8 @@ def traverse_dirs(curr_file):
     if os.path.isdir(curr_file):
         # print("DIR {}".format(curr_file)) # test output
         for file in os.listdir(curr_file):
-            # TODO: Adapt for Windows ("\" instead of "/").
             # traverse_dirs("{}/{}".format(curr_file, file))
+            # system-independent version:
             traverse_dirs(os.path.join(curr_file, file))
             
             
