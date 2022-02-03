@@ -7,10 +7,21 @@ from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import COMMASPACE # ", "
+import distutils.spawn
 
 
-def determine_installed_mail_client(): # TODO
-    pass
+def determine_installed_mail_client():
+    """
+    Checks if one of the mail clients "Mozilla Thunderbird" or "Microsoft Outlook" is installed on the local system.
+    
+    :returns: "Thunderbird" or "Outlook" if the respective programm is installed on the local system, `None` otherwise.
+    """
+    if distutils.spawn.find_executable("thunderbird") is not None:
+        return "Thunderbird"
+    elif distutils.spawn.find_executable("outlook") is not None:
+        return "Outlook"
+    # TODO: Add support for more email clients
+    return None
 
 
 def read_sender_email_thunderbird(): # TODO
