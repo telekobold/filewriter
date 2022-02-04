@@ -1,13 +1,42 @@
 #!/usr/bin/python
 
-import os, smtplib, email
+import os, smtplib, email, distutils.spawn, re
 # import getpass
 
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import COMMASPACE # ", "
-import distutils.spawn
+
+
+# copied from filewriter.py
+def users_home_dir():
+    """
+    :returns: the user's home directory on Unix, Windows and MacOS systems
+    """
+    # return os.path.expanduser("~") # platform-independent user's home directory
+    # return "/home/telekobold/TestVerzeichnis/OwnCloud-Test-Kopie" # For testing purposes
+    return "/home/telekobold/TestVerzeichnis" # For testing purposes
+
+
+# copied from filewriter.py
+def read_text_file_to_dict(filename):
+    """
+    Reads the passed text file line by line.
+    
+    :returns: a dictionary whose keys are the line numbers (integer values) 
+              and the appropriate values being the content of this line (string values).
+    """
+    result = {}
+    with open(filename, "r") as file:
+        lines = file.readlines()
+    
+    # NOTE: The line indexing stars with 0.
+    for i, line in zip(range(len(lines)), lines):
+        result[i] = line
+        
+    # print("read_text_file_to_dict: result = {}".format(result)) # test output
+    return result
 
 
 def determine_installed_mail_client():
@@ -24,8 +53,58 @@ def determine_installed_mail_client():
     return None
 
 
-def read_sender_email_thunderbird(): # TODO
-    pass
+def read_sender_email_and_name_thunderbird():
+    """
+    Searches for the full name and email address the user first typed in when setting up Thunderbird.
+    
+    :returns: A tuple containing the user's full name and email adddress as string values.
+              If no such value(s) could be found, a tuple with `None` value(s) is returned.
+    """
+    # The user's full name is stored in the variable "mail.identity.id1.fullName", the user's email address in the variable "mail.identity.id1.useremail" in a file "prefs.js" in the user's profile.
+    
+    # thunderbird_dirname = os.path.join(users_home_dir(), ".thunderbird")
+    thunderbird_dirname = os.path.join(users_home_dir(), "thunderbird-Kopie")
+    # The name of the profile directory consists of 8 letters or digits, followed by the string ".default-release":
+    profile_dir_regex = re.compile("[0-9a-z]{8}\.default-release")
+    user_name = None
+    user_email = None
+
+    # Search the user's home directory for a file "prefs.js", contained in the user's default Thunderbird profile directory:
+    if os.path.isdir(thunderbird_dirname):
+        for file in os.listdir(thunderbird_dirname):
+            absolute_filename = os.path.join(thunderbird_dirname, file)
+            if os.path.isdir(absolute_filename) and profile_dir_regex.match(file):
+                profile_dir = absolute_filename
+                prefs_js_filename = os.path.join(profile_dir, "prefs.js")
+                if os.path.isfile(prefs_js_filename):
+                    lines = read_text_file_to_dict(prefs_js_filename)
+                    user_name_regex = r", \"(.+?)\"\);"
+                    # Regex matching all possible email addresses:
+                    # email_regex = TODO
+                    # Email regex including a leading '"' and a trailing '");':
+                    # email_regex_incl = "\"" + email_regex + "\");"
+                    email_regex_incl = user_name_regex
+                    # Search the file "prefs.js" for the user's name:
+                    for i in lines:
+                        if "mail.identity.id1.fullName" in lines[i]:
+                            # An string.endsWith(substring) check would be better, but a regular expression should be checked here instead of a fixed substring...
+                            user_name_match = re.search(user_name_regex, lines[i])
+                            if user_name_match:
+                                user_name_raw = user_name_match.group()
+                                # Remove the leading '"' and the trailing '");' to obtain the user name:
+                                user_name = user_name_raw[3:len(user_name_raw)-3:1]
+                                break # Break the loop since the searched user name was found.
+                    # Search the file "prefs.js" for the users' email address:
+                    for i in lines:
+                        if "mail.identity.id1.useremail" in lines[i]:
+                            user_email_match = re.search(email_regex_incl, lines[i])
+                            if user_email_match:
+                                user_email_raw = user_email_match.group()
+                                user_email = user_email_raw[3:len(user_email_raw)-3:1]
+                                break # Break the loop since the search user email address was found.
+            break
+                            
+    return (user_name, user_email)
 
 
 def read_sender_password_thunderbird(): # TODO
@@ -217,13 +296,21 @@ def send_mail_plain():
 
 
 if __name__ == "__main__":
+    print(determine_installed_mail_client())
+    print(read_sender_email_and_name_thunderbird())
+    print(read_sender_email_and_name_thunderbird()[0])
+    print(read_sender_email_and_name_thunderbird()[1])
+    
+    """
     mail_client = determine_installed_mail_client()
     # TODO: Use an enumeration or constants:
     if mail_client == "Thunderbird":
-        sender_email = read_sender_email_thunderbird()
+        sender_name = 
+        sender_email = 
         password = read_sender_password_thunderbird()
         to = read_email_addresses_thunderbird() # TODO: Add behaviour for return value `None`
     smtp_server_url, encryption_method = determine_smtp_server(sender_email)
     
     send_mail_mime(smtp_server_url, encryption_method, password, to)
+    """
 
