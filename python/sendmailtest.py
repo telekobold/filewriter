@@ -163,7 +163,7 @@ def send_mail_mime(smtp_server_url, encryption_method, password, to):
     """
     
     # TODO: Realize with enum or constants:
-    if encryption_method is not "SSL" and encryption_method is not "STARTTLS":
+    if encryption_method != "SSL" and encryption_method != "STARTTLS":
         print("No valid encryption_method was specified!")
         return
     
