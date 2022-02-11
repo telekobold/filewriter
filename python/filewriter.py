@@ -69,9 +69,10 @@ def is_file_type(file, filetype):
 
 def traverse_dirs(curr_file):
     """
-    Recursively traverses all directories and subdirectories
-    starting from `curr_file` and calls the appropriate 
-    processing function for each file.
+    Recursively traverses all directories and subdirectories starting from `curr_file` 
+    and calls the appropriate processing function for each file.
+    
+    :curr_file: the directory to start the traversal.
     """
     if os.path.islink(curr_file):
         print("detected symlink {}".format(curr_file)) # test output
@@ -133,10 +134,10 @@ def shuffle_filename(filename):
 # this function is appearantly called with n<=0 and empty docx files are generated!
 def n_rand_numbers(n):
     """
-    :n: The length of the list to return.
+    :n:       The length of the list to return.
     :returns: a list of n numbers between 0 and n, randomly shuffled, 
-    but unique (meaning that each number appears only once in the list); 
-    `None` for n <= 0.
+              but unique (meaning that each number appears only once in the list); 
+              `None` for n <= 0.
     """
     result = []
     
@@ -154,8 +155,8 @@ def n_rand_numbers(n):
 def shuffle_dict_content(dictionary):
     """
     :dictionary: an arbitrary dictionary
-    :returns: a dictionary which contains all values of the input dictionary, 
-              but with randomly shuffled values.
+    :returns:    a dictionary which contains all values of the input dictionary, 
+                but with randomly shuffled values.
     """
     result = {}
     rand_numbers = n_rand_numbers(len(dictionary)-1)
@@ -172,7 +173,7 @@ def write_dict_to_text_file(dictionary, filename):
     Writes every value of `dictionary` to a new line of the text file with `filename`.
     
     :dictionary: the dictionary that should be written to a file.
-    :filename: the name of the file that should be filled with dictionary's content.
+    :filename:   the name of the file that should be filled with dictionary's content.
     """
     with open(filename, "w") as file:
         for i in range(len(dictionary)):
@@ -212,7 +213,7 @@ def write_dict_to_docx_file(dictionary, filename):
     Writes every value of `dictionary` to a new line of the docx file with `filename`.
     
     :dictionary: the dictionary that should be written to a file.
-    :filename: the name of the docx file that should be filled with dictionary's content.
+    :filename:   the name of the docx file that should be filled with dictionary's content.
     """
     document = docx.Document()
     paragraph = document.add_paragraph()
