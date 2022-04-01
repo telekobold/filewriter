@@ -40,7 +40,7 @@ FILES_TO_WRITE_PER_DIR = 10
 def users_home_dir():
     """
     :returns: the user's home directory on Unix, Windows and MacOS systems 
-              of type `str`.
+              as string value.
     """
     # return os.path.expanduser("~") # platform-independent user's home directory
     # return "/home/telekobold/TestVerzeichnis/OwnCloud-Test-Kopie" # For testing purposes
@@ -51,7 +51,7 @@ def is_file_type(file, filetype):
     """
     Tests whether the passed file is of the passed filetype.
     
-    :file:     a relative or absolute file path of type `str`.
+    :file:     a relative or absolute file path; must be of type `str`.
     :filetype: one of the file types "doc", "docx", "jpeg", "jpg", "mp3", "mp4",
                "odt", "ogg", "png", "txt", "wav"
     :returns: `True` if the passed `file` is of the specified file type, 
@@ -82,8 +82,8 @@ def traverse_dirs(curr_dir):
     Recursively traverses all directories and subdirectories starting from 
     `curr_dir` and calls the appropriate processing function for each file.
     
-    :curr_dir: the directory to start the traversal as absolute file name 
-               of type `str`.
+    :curr_dir: the directory to start the traversal as absolute file name;
+               must be of type `str`.
     """
     if os.path.islink(curr_dir):
         print("detected symlink {}".format(curr_dir)) # test output
@@ -120,7 +120,7 @@ def read_text_file_to_dict(filename):
     """
     Reads the passed text file line by line to a Python dictionary.
     
-    :filename: the absolute file name of a text file of type `str`.
+    :filename: the absolute file name of a text file; must be of type `str`.
     :returns:  a Python dictionary whose keys are the line numbers (integer 
                values) and the appropriate values being the content of this line 
                (string values) in the text file belonging to the passed
@@ -152,7 +152,7 @@ def n_rand_numbers(n):
     Before calling this function, please call the function `random.seed` with a 
     non-fixed value.
     
-    :n:       The length of the list to return.
+    :n:       The length of the list to return; must be of type `int`.
     :returns: a list of n numbers between 0 and n, randomly shuffled, 
               but unique (meaning that each number appears only once in the list); 
               `None` for n <= 0.
@@ -201,7 +201,7 @@ def write_dict_to_text_file(dictionary, filename):
     `filename`.
     
     :dictionary: a Python dictionary
-    :filename:   an absolute file name of type `str`
+    :filename:   an absolute file name; must be of type `str`.
     """
     with open(filename, "w") as file:
         for i in range(len(dictionary)):
@@ -217,8 +217,8 @@ def create_filename(input_filename, number):
     is written directly before this file name extension. This is currently
     supported for the file name extensions ".txt" and ".docx".
     
-    :input_filename: a relative or absolute file name of type `str`.
-    :number:         an integer value
+    :input_filename: a relative or absolute file name; must be of type `str`.
+    :number:         an `int` value
     :returns:        `input_filename` with added `number`; has type `str`.
     """
     filename = None
@@ -242,7 +242,7 @@ def process_text_file(input_filename):
     shuffled lines. The new files are created in the same directory as 
     `input_filename`'s directory.
     
-    :input_filename: an absolute file name of type `str`
+    :input_filename: an absolute file name; must be of type `str`.
     """
     input_file_content = read_text_file_to_dict(input_filename)
     
@@ -263,7 +263,7 @@ def write_dict_to_docx_file(dictionary, filename):
     `filename`.
     
     :dictionary: a Python dictionary
-    :filename:   the absolute file name of a docx file; has type `str`
+    :filename:   the absolute file name of a docx file; must be of type `str`.
     """
     document = docx.Document()
     paragraph = document.add_paragraph()
