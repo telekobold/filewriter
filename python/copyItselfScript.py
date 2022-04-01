@@ -1,26 +1,25 @@
 #!/usr/bin/python
 
-import shutil, os, time
-
-
-def users_home_dir():
-    """
-    :returns: the user's home directory on Unix, Windows and MacOS systems
-    """
-    # return os.path.expanduser("~") # platform-independent user's home directory
-    # return "/home/telekobold/TestVerzeichnis/OwnCloud-Test-Kopie" # For testing purposes
-    return "/home/telekobold/TestVerzeichnis" # For testing purposes
+import shutil
+import os
+import time
 
 
 def copy_itself(destination):
     """
     Makes a copy of this script and writes it to `destination`.
     
-    :destination: the absolute file path where the copy should be placed.
+    Writes the current date and time as prefix to the file name of the created 
+    copy (including year, month, day, hours, minutes and seconds). This should 
+    avoid that multiple calls to this function always overwrite the copy
+    from the previous call.
+    
+    :destination: the absolute file path where the copy should be placed;
+                  has type `str`
     """
-    copy_name = time.strftime("%Y-%m-%d_%H%M") + "_" + os.path.basename(__file__)
+    copy_name = time.strftime("%Y-%m-%d_%H%M%S") + "_" + os.path.basename(__file__)
     shutil.copy(__file__, os.path.join(destination, copy_name))
 
 
 if __name__ == "__main__":
-    copy_itself(users_home_dir())
+    copy_itself("/home/telekobold/TestVerzeichnis")
