@@ -123,7 +123,8 @@ def read_text_file_to_dict(filename):
     :filename: the absolute file name of a text file of type `str`.
     :returns:  a Python dictionary whose keys are the line numbers (integer 
                values) and the appropriate values being the content of this line 
-               (string values) in the passed text file.
+               (string values) in the text file belonging to the passed
+               `filename`.
     """
     result = {}
     # TODO: Add error handling if file opening doesn't work (e.g. because of 
