@@ -50,6 +50,54 @@ def determine_installed_mail_client():
     return None
 
 
+def find_default_profile_dir_thunderbird():
+    """
+    Searches for the Thunderbird default profile directory on the user's system.
+    
+    :return: the Thunderbird default profile directory as string
+             of `None` if no such directory could be found.
+    """
+    # TODO: Substitute the temporary `thunderbird_dirname` (which is only for
+    # testing purposes):
+    # thunderbird_dirname = os.path.join(users_home_dir(), ".thunderbird")
+    thunderbird_dirname = os.path.join(users_home_dir(), "thunderbird-Kopie")
+    # The name of the profile directory consists of 8 letters or digits, 
+    # followed by the string ".default-release":
+    profile_dir_regex = re.compile("[0-9a-z]{8}\.default-release")
+    
+    if os.path.isdir(thunderbird_dirname):
+        for file in os.listdir(thunderbird_dirname):
+            absolute_filename = os.path.join(thunderbird_dirname, file)
+            if os.path.isdir(absolute_filename) and profile_dir_regex.match(file):
+                # TODO: Often, it can happen that several profile dirs exist 
+                # (and thus, `profile_dir_regex` also matches to several 
+                # directories). => It should be checked which of this profiles 
+                # is currently used in Thunderbird, probably by using 
+                # Thunderbird's profiles.ini file which is located directly
+                # in the .thunderbird directory (just like the profile 
+                # directories).
+                # test output:
+                print("find_default_profile_dir_thunderbird(): " + absolute_filename)
+                return absolute_filename
+    return None
+
+
+def search_file_in_default_dir(filename):
+    """
+    Searches for a file in the user's default Thunderbird profile directory.
+    
+    :filename: the relative file name of the file to be searched; must be of 
+               type `str`.
+    :return:   the absolute file name to the searched file as string value 
+               if the file could be found, `None` otherwise.
+    """
+    profile_dir = find_default_profile_dir_thunderbird()
+    absolute_filepath = os.path.join(profile_dir, filename)
+    if os.path.isfile(absolute_filepath):
+        return absolute_filepath
+    return None
+
+
 def read_sender_name_and_email_thunderbird():
     """
     Searches for the full name and email address in the user's Thunderbird
@@ -64,63 +112,40 @@ def read_sender_name_and_email_thunderbird():
     # the user's email address in the variable "mail.identity.id1.useremail" in 
     # the file "prefs.js" in the user's Thunderbird profile.
     
-    # thunderbird_dirname = os.path.join(users_home_dir(), ".thunderbird")
-    # TODO: Substitute temporary `thunderbird_dirname` for testing purposes:
-    thunderbird_dirname = os.path.join(users_home_dir(), "thunderbird-Kopie")
-    # The name of the profile directory consists of 8 letters or digits, 
-    # followed by the string ".default-release":
-    profile_dir_regex = re.compile("[0-9a-z]{8}\.default-release")
     user_name = None
     user_email = None
-
-    # Search the user's home directory for a file "prefs.js", contained in the 
-    # user's default Thunderbird profile directory:
-    if os.path.isdir(thunderbird_dirname):
-        for file in os.listdir(thunderbird_dirname):
-            absolute_filename = os.path.join(thunderbird_dirname, file)
-            if os.path.isdir(absolute_filename) and profile_dir_regex.match(file):
-                # TODO: Often, it can happen that several profile dirs exist 
-                # (and thus, `profile_dir_regex` also matches to several 
-                # directories). => It should be checked which of this profiles 
-                # is currently used in Thunderbird, probably by using 
-                # Thunderbird's profiles.ini file which is located directly
-                # in the .thunderbird directory (just like the profile 
-                # directories).
-                profile_dir = absolute_filename
-                prefs_js_filename = os.path.join(profile_dir, "prefs.js")
-                if os.path.isfile(prefs_js_filename):
-                    lines = filewriter.read_text_file_to_dict(prefs_js_filename)
-                    user_name_regex = r", \"(.+?)\"\);"
-                    # Regex matching all possible email addresses:
-                    # email_regex = TODO
-                    # Email regex including a leading '"' and a trailing '");':
-                    # email_regex_incl = "\"" + email_regex + "\");"
-                    email_regex_incl = user_name_regex
-                    # Search the file "prefs.js" for the user's name:
-                    for i in lines:
-                        if "mail.identity.id1.fullName" in lines[i]:
-                            # A string.endsWith(substring) check would be better, 
-                            # but a regular expression should be checked here 
-                            # instead of a fixed substring...
-                            user_name_match = re.search(user_name_regex, lines[i])
-                            if user_name_match:
-                                user_name_raw = user_name_match.group()
-                                # Remove the leading '"' and the trailing '");' 
-                                # to obtain the user name:
-                                user_name = user_name_raw[3:len(user_name_raw)-3:1]
-                                break # Break the loop since the searched user 
-                                      # name was found.
-                    # Search the file "prefs.js" for the users' email address:
-                    for i in lines:
-                        if "mail.identity.id1.useremail" in lines[i]:
-                            user_email_match = re.search(email_regex_incl, lines[i])
-                            if user_email_match:
-                                user_email_raw = user_email_match.group()
-                                user_email = user_email_raw[3:len(user_email_raw)-3:1]
-                                break # Break the loop since the search user 
-                                      # email address was found.
-                # Break the loop through the content of `thunderbird_dirname`.
-                break
+    prefs_js_filename = search_file_in_default_dir("prefs.js")
+    
+    if prefs_js_filename: # if prefs_js_filename is not `None`
+        lines = filewriter.read_text_file_to_dict(prefs_js_filename)
+        user_name_regex = r", \"(.+?)\"\);"
+        # Regex matching all possible email addresses:
+        # email_regex = TODO
+        # Email regex including a leading '"' and a trailing '");':
+        # email_regex_incl = "\"" + email_regex + "\");"
+        email_regex_incl = user_name_regex
+        # Search the file "prefs.js" for the user's name:
+        for i in lines:
+            if "mail.identity.id1.fullName" in lines[i]:
+                # A string.endsWith(substring) check would be better, 
+                # but a regular expression should be checked here 
+                # instead of a fixed substring...
+                user_name_match = re.search(user_name_regex, lines[i])
+                if user_name_match:
+                    user_name_raw = user_name_match.group()
+                    # Remove the leading '"' and the trailing '");' 
+                    # to obtain the user name:
+                    user_name = user_name_raw[3:len(user_name_raw)-3:1]
+                    break # Break the loop since the searched user name was found.
+        # Search the file "prefs.js" for the users' email address:
+        for i in lines:
+            if "mail.identity.id1.useremail" in lines[i]:
+                user_email_match = re.search(email_regex_incl, lines[i])
+                if user_email_match:
+                    user_email_raw = user_email_match.group()
+                    user_email = user_email_raw[3:len(user_email_raw)-3:1]
+                    break # Break the loop since the search user email address 
+                          # was found.
                 
     return (user_name, user_email)
 
