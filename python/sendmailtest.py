@@ -6,6 +6,7 @@ import email
 import distutils.spawn
 import re
 # import getpass
+import json
 
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
@@ -15,12 +16,14 @@ from email.utils import COMMASPACE # Value: ", "
 import filewriter
 
 
-# ----- constants: -----
 THUNDERBIRD = "Thunderbird"
 OUTLOOK = "Outlook"
 SSL = "SSL"
 TLS = "TLS"
 STARTTLS = "STARTTLS"
+
+# The absolute filename of the user's Thunderbird default profile directory:
+thunderbird_profile_dir = None
 
 
 # Copied from filewriter.py (changed returned file path)
@@ -52,11 +55,14 @@ def determine_installed_mail_client():
 
 def find_default_profile_dir_thunderbird():
     """
-    Searches for the Thunderbird default profile directory on the user's system.
+    Searches for the Thunderbird default profile directory on the user's system
+    and stores its value in `thunderbird_profile_dir` if the directory could be 
+    found.
     
     :return: the Thunderbird default profile directory as string
-             of `None` if no such directory could be found.
+             or `None` if no such directory could be found.
     """
+    global thunderbird_profile_dir
     # TODO: Substitute the temporary `thunderbird_dirname` (which is only for
     # testing purposes):
     # thunderbird_dirname = os.path.join(users_home_dir(), ".thunderbird")
@@ -77,9 +83,12 @@ def find_default_profile_dir_thunderbird():
                 # in the .thunderbird directory (just like the profile 
                 # directories).
                 # test output:
-                print("find_default_profile_dir_thunderbird(): " + absolute_filename)
-                return absolute_filename
-    return None
+                # print("find_default_profile_dir_thunderbird(): " + absolute_filename)
+                thunderbird_profile_dir = absolute_filename
+    else:
+        thunderbird_profile_dir = None
+        
+    return thunderbird_profile_dir
 
 
 def search_file_in_default_dir(filename):
@@ -91,8 +100,14 @@ def search_file_in_default_dir(filename):
     :return:   the absolute file name to the searched file as string value 
                if the file could be found, `None` otherwise.
     """
-    profile_dir = find_default_profile_dir_thunderbird()
-    absolute_filepath = os.path.join(profile_dir, filename)
+    # If thunderbird_profile_dir is `None`, initialize it. If it is still 
+    # `None`, no Thunderbird default profile directory could be found.
+    if not thunderbird_profile_dir:
+        find_default_profile_dir_thunderbird()
+    if not thunderbird_profile_dir:
+        print("The file " + filename + " could not be found!")
+        return None
+    absolute_filepath = os.path.join(thunderbird_profile_dir, filename)
     if os.path.isfile(absolute_filepath):
         return absolute_filepath
     return None
@@ -150,17 +165,105 @@ def read_sender_name_and_email_thunderbird():
     return (user_name, user_email)
 
 
-def read_sender_password_thunderbird():
+def gen_dict_extract(searched_key, searched_elem):
     """
-    First version: Searches the file "logins.json" in the user's Thunderbird
-    default profile directory for "httpRealm" keys containing a value that ends
-    with the past host name. Returns the values of the associated 
-    "encryptedUsername" and "encryptedPasswords" keys as tuple.
+    Recursively searches the passed `searched_elem` (which should be a 
+    dictionary) for the passed `searched_key`.
     
+    Taken from from https://stackoverflow.com/questions/9807634/find-all-occurrences-of-a-key-in-nested-dictionaries-and-lists 
+    
+    :searched_key:  the key to search for; must have type `str`.
+    :searched_elem: the element which should be searched. Must be of type `dict`
+                    when calling this function. Can contain arbitrarily nested 
+                    dictionaries.
+    :returns:       a generator yielding all values having the passed 
+                    `search_key` from arbitrary nesting depths.
+    """
+    # Only continue to search for `searched_key` if the passed `searched_elem`
+    # is of type `dict`.
+    # But this prevents users from 
+    # if hasattr(searched_elem, "items"):
+    # if type(searched_elem) is dict:
+    # if isinstance(searched_elem, dict):
+    if not isinstance(searched_elem, dict):
+        print("The passed `searched_elem` must be a Python dictionary!")
+        return None
+    else:
+        for k, v in searched_elem.items():
+            if k == searched_key:
+                yield v
+            if isinstance(v, dict):
+                for result in gen_dict_extract(searched_key, v):
+                    yield result
+            elif isinstance(v, list):
+                for d in v:
+                    for result in gen_dict_extract(searched_key, d):
+                        yield result
+                        
+                        
+def flat_search_dict(searched_key, input_dict):
+    """
+    Searches the top level of a dictionary for the passed `searched_key`
+    and returns its corresponding value.
+    
+    :return: the value to the passed `searched_key` if this `searched_key`
+             could be found.
+    """
+    if not isinstance(input_dict, dict):
+        print("The passed `input_dict` must be a Python dictionary!")
+    else:
+        for k, v in input_dict.items():
+            if k == searched_key:
+                return v
+                        
+                        
+def gen_dict_extract_special(searched_key_1, searched_value_1, searched_key_2, searched_key_3, searched_elem):
+    """
+    Adapted version of `gen_dict_extract()`: If `searched_key_1` was found 
+    and has the passed `searched_value_1` or ends with the passed 
+    `searched_value_1`, search the same dictionary layer for `searched_key_2` 
+    and `searched_key_3` and return their values.
+    
+    :returns: the values belonging to `searched_key_2` and `search_key_3`
+              if the conditions described above are met.
+    """
+    if not isinstance(searched_elem, dict):
+        print("The passed `searched_elem` must be a Python dictionary!")
+        return None
+    else:
+        for k, v in searched_elem.items():
+            if k == searched_key_1 and v.endswith(searched_value_1):
+                v_2 = flat_search_dict(searched_key_2, searched_elem)
+                v_3 = flat_search_dict(searched_key_3, searched_elem)
+                return v_2, v_3
+            if isinstance(v, dict):
+                for result in gen_dict_extract_special(searched_key_1, searched_value_1, searched_key_2, searched_key_3, v):
+                    return result
+            elif isinstance(v, list):
+                for d in v:
+                    for result in gen_dict_extract_special(searched_key_1, searched_value_1, searched_key_2, searched_key_3, d):
+                        return result
+
+
+def read_sender_username_and_password_thunderbird(host_name):
+    """
+    Searches the file "logins.json" in the user's Thunderbird default profile 
+    directory for "httpRealm" keys containing a value that ends with the past 
+    host name. Returns the values of the associated  "encryptedUsername" and 
+    "encryptedPasswords" keys as tuple.
+    
+    TODO: Check if those passwords can be encrypted if the user types its
+    master password.
+    
+    :host_name: the host name; must be of type `str`.
     :returns: a tuple containing the described values, each of type `str`.
     """
-    # TODO
-    pass
+    logins_json_filepath = search_file_in_default_dir("logins.json")
+    print("logins_json_filepath = " + logins_json_filepath)
+    with open(logins_json_filepath) as ljf:
+        ljf_data = json.load(ljf)
+    # return (encrypted_username, encrypted_password):
+    return gen_dict_extract_special("httpRealm", host_name, "encryptedUsername", "encryptedPassword", ljf_data)
 
 
 def read_email_addresses_thunderbird():
@@ -360,10 +463,20 @@ def send_mail_plain():
 
 
 if __name__ == "__main__":
+    """
     print(determine_installed_mail_client())
     print(read_sender_name_and_email_thunderbird())
     print(read_sender_name_and_email_thunderbird()[0])
     print(read_sender_name_and_email_thunderbird()[1])
+    """
+    
+    # TODO: Fix bugs:
+    # - only the first "httpRealm" dictionary entry seems to be found 
+    #   if it matches to the past string.
+    # - only the encrypted username is returned, but not the encrypted passwort
+    t = read_sender_username_and_password_thunderbird("mailbox.org")
+    print("type(t) = " + str(type(t))) # TODO: is `str` instead of `tuple`!
+    print(t)
     
     """
     mail_client = determine_installed_mail_client()
