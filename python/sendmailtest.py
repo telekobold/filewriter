@@ -151,6 +151,14 @@ def read_sender_name_and_email_thunderbird():
 
 
 def read_sender_password_thunderbird():
+    """
+    First version: Searches the file "logins.json" in the user's Thunderbird
+    default profile directory for "httpRealm" keys containing a value that ends
+    with the past host name. Returns the values of the associated 
+    "encryptedUsername" and "encryptedPasswords" keys as tuple.
+    
+    :returns: a tuple containing the described values, each of type `str`.
+    """
     # TODO
     pass
 
