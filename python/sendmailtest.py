@@ -96,7 +96,7 @@ def search_file_in_default_dir(filename: str) -> str:
     if not THUNDERBIRD_PROFILE_DIR:
         find_default_profile_dir_thunderbird()
     if not THUNDERBIRD_PROFILE_DIR:
-        print("The file " + filename + " could not be found!")
+        print(f"The file {filename} could not be found!")
         return None
     absolute_filepath = os.path.join(THUNDERBIRD_PROFILE_DIR, filename)
     if os.path.isfile(absolute_filepath):
@@ -250,7 +250,7 @@ def read_sender_username_and_password_thunderbird(host_name: str) -> typing.Tupl
     :returns:   a tuple containing the described values.
     """
     logins_json_filepath = search_file_in_default_dir("logins.json")
-    print("logins_json_filepath = " + logins_json_filepath)
+    print(f"logins_json_filepath = {logins_json_filepath}")
     with open(logins_json_filepath) as ljf:
         ljf_data = json.load(ljf)
     # return (encrypted_username, encrypted_password):
@@ -465,7 +465,7 @@ if __name__ == "__main__":
     #   if it matches to the past string.
     # - only the encrypted username is returned, but not the encrypted passwort
     t = read_sender_username_and_password_thunderbird("mailbox.org")
-    print("type(t) = " + str(type(t))) # TODO: is `str` instead of `tuple`!
+    print(f"type(t) = {str(type(t))}") # TODO: is `str` instead of `tuple`!
     print(t)
     
     """

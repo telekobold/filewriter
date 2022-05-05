@@ -220,9 +220,9 @@ def create_filename(input_filename: str, number: int) -> str:
     filename = None
     
     if input_filename.endswith(".txt"):
-        filename = input_filename[0:len(input_filename)-4:1] + "_" + str(number) + ".txt"
+        filename = f"{input_filename[0:len(input_filename)-4:1]}_{str(number)}.txt"
     elif input_filename.endswith(".docx"):
-        filename = input_filename[0:len(input_filename)-5:1] + "_" + str(number) + ".docx"
+        filename = f"{input_filename[0:len(input_filename)-5:1]}_{str(number)}.docx"
     else:
         filename = input_filename + str(i)
         
