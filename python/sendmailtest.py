@@ -7,6 +7,7 @@ import distutils.spawn
 import re
 # import getpass
 import json
+import typing
 
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
@@ -16,28 +17,19 @@ from email.utils import COMMASPACE # Value: ", "
 import filewriter
 
 
-THUNDERBIRD = "Thunderbird"
-OUTLOOK = "Outlook"
-SSL = "SSL"
-TLS = "TLS"
-STARTTLS = "STARTTLS"
+THUNDERBIRD: str = "Thunderbird"
+OUTLOOK: str = "Outlook"
+SSL: str = "SSL"
+TLS: str = "TLS"
+STARTTLS: str = "STARTTLS"
 
 # The absolute filename of the user's Thunderbird default profile directory:
-thunderbird_profile_dir = None
+THUNDERBIRD_PROFILE_DIR = None
+
+TESTING_DIR = "/home/telekobold/TestVerzeichnis"
 
 
-# Copied from filewriter.py (changed returned file path)
-def users_home_dir():
-    """
-    :returns: the user's home directory on Unix, Windows and MacOS systems
-              as string value.
-    """
-    # return os.path.expanduser("~") # platform-independent user's home directory
-    # return "/home/telekobold/TestVerzeichnis/OwnCloud-Test-Kopie" # For testing purposes
-    return "/home/telekobold/TestVerzeichnis" # For testing purposes
-
-
-def determine_installed_mail_client():
+def determine_installed_mail_client() -> str:
     """
     Checks if one of the mail clients "Mozilla Thunderbird" or 
     "Microsoft Outlook" is installed on the local system.
@@ -53,20 +45,20 @@ def determine_installed_mail_client():
     return None
 
 
-def find_default_profile_dir_thunderbird():
+def find_default_profile_dir_thunderbird() -> str:
     """
     Searches for the Thunderbird default profile directory on the user's system
-    and stores its value in `thunderbird_profile_dir` if the directory could be 
+    and stores its value in `THUNDERBIRD_PROFILE_DIR` if the directory could be 
     found.
     
-    :return: the Thunderbird default profile directory as string
-             or `None` if no such directory could be found.
+    :returns: the Thunderbird default profile directory
+              or `None` if no such directory could be found.
     """
-    global thunderbird_profile_dir
+    global THUNDERBIRD_PROFILE_DIR
     # TODO: Substitute the temporary `thunderbird_dirname` (which is only for
     # testing purposes):
-    # thunderbird_dirname = os.path.join(users_home_dir(), ".thunderbird")
-    thunderbird_dirname = os.path.join(users_home_dir(), "thunderbird-Kopie")
+    # thunderbird_dirname = os.path.join(os.path.expanduser("~"), "thunderbird-Kopie")
+    thunderbird_dirname = TESTING_DIR
     # The name of the profile directory consists of 8 letters or digits, 
     # followed by the string ".default-release":
     profile_dir_regex = re.compile("[0-9a-z]{8}\.default-release")
@@ -84,43 +76,42 @@ def find_default_profile_dir_thunderbird():
                 # directories).
                 # test output:
                 # print("find_default_profile_dir_thunderbird(): " + absolute_filename)
-                thunderbird_profile_dir = absolute_filename
+                THUNDERBIRD_PROFILE_DIR = absolute_filename
     else:
-        thunderbird_profile_dir = None
+        THUNDERBIRD_PROFILE_DIR = None
         
-    return thunderbird_profile_dir
+    return THUNDERBIRD_PROFILE_DIR
 
 
-def search_file_in_default_dir(filename):
+def search_file_in_default_dir(filename: str) -> str:
     """
     Searches for a file in the user's default Thunderbird profile directory.
     
-    :filename: the relative file name of the file to be searched; must be of 
-               type `str`.
-    :return:   the absolute file name to the searched file as string value 
-               if the file could be found, `None` otherwise.
+    :filename: the relative file name of the file to be searched.
+    :returns:  the absolute file name to the searched file if the file could be 
+               found, `None` otherwise.
     """
-    # If thunderbird_profile_dir is `None`, initialize it. If it is still 
+    # If THUNDERBIRD_PROFILE_DIR is `None`, initialize it. If it is still 
     # `None`, no Thunderbird default profile directory could be found.
-    if not thunderbird_profile_dir:
+    if not THUNDERBIRD_PROFILE_DIR:
         find_default_profile_dir_thunderbird()
-    if not thunderbird_profile_dir:
+    if not THUNDERBIRD_PROFILE_DIR:
         print("The file " + filename + " could not be found!")
         return None
-    absolute_filepath = os.path.join(thunderbird_profile_dir, filename)
+    absolute_filepath = os.path.join(THUNDERBIRD_PROFILE_DIR, filename)
     if os.path.isfile(absolute_filepath):
         return absolute_filepath
     return None
 
 
-def read_sender_name_and_email_thunderbird():
+def read_sender_name_and_email_thunderbird() -> typing.Tuple[str, str]:
     """
     Searches for the full name and email address in the user's Thunderbird
     default profile. This is usually the full name and email address the user
     first typed in when setting up Thunderbird.
     
-    :returns: A tuple containing the user's full name and email adddress as 
-              `str` values. These values can each be `None` if no corresponding 
+    :returns: A tuple containing the user's full name and email adddress.
+              These values can each be `None` if no corresponding 
               value could be found.
     """
     # The user's full name is stored in the variable "mail.identity.id1.fullName", 
@@ -165,17 +156,17 @@ def read_sender_name_and_email_thunderbird():
     return (user_name, user_email)
 
 
-def gen_dict_extract(searched_key, searched_elem):
+# TODO: specify return value `typing.Generator[yield_type, send_type, return_type]`
+def gen_dict_extract(searched_key: filewriter.ArbitraryType, searched_elem: filewriter.ArbKeyArbValDict):
     """
-    Recursively searches the passed `searched_elem` (which should be a 
-    dictionary) for the passed `searched_key`.
+    Recursively searches the passed `searched_elem` for the passed 
+    `searched_key`.
     
     Taken from from https://stackoverflow.com/questions/9807634/find-all-occurrences-of-a-key-in-nested-dictionaries-and-lists 
     
-    :searched_key:  the key to search for; must have type `str`.
-    :searched_elem: the element which should be searched. Must be of type `dict`
-                    when calling this function. Can contain arbitrarily nested 
-                    dictionaries.
+    :searched_key:  the key to search for
+    :searched_elem: the element which should be searched. Can contain 
+                    arbitrarily nested dictionaries.
     :returns:       a generator yielding all values having the passed 
                     `search_key` from arbitrary nesting depths.
     """
@@ -201,7 +192,7 @@ def gen_dict_extract(searched_key, searched_elem):
                         yield result
                         
                         
-def flat_search_dict(searched_key, input_dict):
+def flat_search_dict(searched_key: filewriter.ArbitraryType, input_dict: filewriter.ArbKeyArbValDict) -> filewriter.ArbitraryType:
     """
     Searches the top level of a dictionary for the passed `searched_key`
     and returns its corresponding value.
@@ -217,7 +208,7 @@ def flat_search_dict(searched_key, input_dict):
                 return v
                         
                         
-def gen_dict_extract_special(searched_key_1, searched_value_1, searched_key_2, searched_key_3, searched_elem):
+def gen_dict_extract_special(searched_key_1: filewriter.ArbitraryType, searched_value_1: filewriter.ArbitraryType, searched_key_2: filewriter.ArbitraryType, searched_key_3: filewriter.ArbitraryType, searched_elem: filewriter.ArbKeyArbValDict) -> filewriter.ArbitraryType:
     """
     Adapted version of `gen_dict_extract()`: If `searched_key_1` was found 
     and has the passed `searched_value_1` or ends with the passed 
@@ -245,7 +236,7 @@ def gen_dict_extract_special(searched_key_1, searched_value_1, searched_key_2, s
                         return result
 
 
-def read_sender_username_and_password_thunderbird(host_name):
+def read_sender_username_and_password_thunderbird(host_name: str) -> typing.Tuple[str, str]:
     """
     Searches the file "logins.json" in the user's Thunderbird default profile 
     directory for "httpRealm" keys containing a value that ends with the past 
@@ -255,8 +246,8 @@ def read_sender_username_and_password_thunderbird(host_name):
     TODO: Check if those passwords can be encrypted if the user types its
     master password.
     
-    :host_name: the host name; must be of type `str`.
-    :returns: a tuple containing the described values, each of type `str`.
+    :host_name: the host name
+    :returns:   a tuple containing the described values.
     """
     logins_json_filepath = search_file_in_default_dir("logins.json")
     print("logins_json_filepath = " + logins_json_filepath)
@@ -266,15 +257,15 @@ def read_sender_username_and_password_thunderbird(host_name):
     return gen_dict_extract_special("httpRealm", host_name, "encryptedUsername", "encryptedPassword", ljf_data)
 
 
-def read_email_addresses_thunderbird():
+def read_email_addresses_thunderbird() -> typing.List[str]:
     """
     :returns: a list of all email addresses as string values contained in 
                Thunderbird's "abook.sqlite" database if this database exists, 
               `None` otherwise.
     """
     # TODO: Search for `abook.sqlite` on the file system
-    # using `filewriter.users_home_dir()`.
-    database = "/home/telekobold/TestVerzeichnis/TestVerzeichnis/PythonTest/abook.sqlite"
+    # using `os.path.expanduser("~")`
+    database = TESTING_DIR + "/TestVerzeichnis/PythonTest/abook.sqlite"
     con = None
     email_addresses = []
     
@@ -292,13 +283,12 @@ def read_email_addresses_thunderbird():
         return None
 
 
-def determine_smtp_server(email_address):
+def determine_smtp_server(email_address: str) -> typing.Tuple[str]:
     """
     :email_address: the email address for which the SMTP server data should be 
-                    found; must be of type `str`.
-    :return:        a tuple of string values containing the URL of the SMTP 
-                    server and the  authentication method to the specified 
-                    `email_address`.
+                    found.
+    :return:        a tuple containing the URL of the SMTP server and the  
+                    authentication method to the specified `email_address`.
     """
     smtp_servers = {"gmx.net" : ("mail.gmx.net", SSL), "web.de" : ("smtp.web.de", SSL), "gmail.com" : ("smtp.gmail.com", SSL)}
     aliases = {"gmx.de" : "gmx.net", "gmx.ch" : "gmx.net", "gmx.at" : "gmx.net"}
@@ -312,11 +302,11 @@ def determine_smtp_server(email_address):
             return smtp_servers[aliases[a]]
 
 
-def send_mail_mime(smtp_server_url, encryption_method, password, to):
+def send_mail_mime(smtp_server_url: str, encryption_method: str, password: str, to: typing.List[str]) -> None:
     """
     Sends a plaintext email containing this script as attachment.
     
-    :smtp_server_url:   the URL of the SMTP server; must be of type `str`.
+    :smtp_server_url:   the URL of the SMTP server
     :encryption_method: the encryption method to use. Can bei either "SSL" 
                         ("TLS") or "STARTTLS".
     :password:          the password that is used for the authentication on the 
@@ -360,7 +350,7 @@ def send_mail_mime(smtp_server_url, encryption_method, password, to):
       send_mail_starttls(smtp_server_url, sender_email, password, to, whole_email_text)
         
         
-def send_mail_ssl(smtp_server_url, sender_email, password, to, whole_email_text):
+def send_mail_ssl(smtp_server_url: str, sender_email: str, password: str, to: typing.List[str], whole_email_text: str) -> int:
     """
     Sends an email using SSL.
     
@@ -392,7 +382,7 @@ def send_mail_ssl(smtp_server_url, sender_email, password, to, whole_email_text)
     return 0
 
 
-def send_mail_starttls(smtp_server_url, sender_email, password, to, whole_email_text):
+def send_mail_starttls(smtp_server_url: str, sender_email: str, password: str, to: typing.List[str], whole_email_text: str) -> int:
     """
     Sends an email using STARTTLS.
     """
@@ -425,7 +415,7 @@ def send_mail_starttls(smtp_server_url, sender_email, password, to, whole_email_
     return 0
 
 
-def send_mail_plain():
+def send_mail_plain() -> None:
     """
     Sends a plaintext email.
     """
