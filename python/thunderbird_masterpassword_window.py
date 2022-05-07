@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QLineEdit, QPushButton
+from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QLineEdit, QPushButton, QDesktopWidget
 from PyQt5 import QtGui
 import os
 
@@ -17,8 +17,12 @@ window.setWindowTitle("Password Required - Mozilla Thunderbird")
 # depending on the previously determined installation path of Thunderbird.
 window.setWindowIcon(QtGui.QIcon(os.path.join("data", "default22.png")))
 window.setGeometry(100, 100, 390, 150)
-# TODO: Let the window sporn in the center of the screen.
-window.move(50, 50)
+
+# Let the window sporn in the center of the screen:
+fg = window.frameGeometry()
+center_point = QDesktopWidget().availableGeometry().center()
+fg.moveCenter(center_point)
+window.move(fg.topLeft())
 
 key = QLabel(parent=window)
 pixmap = QtGui.QPixmap(os.path.join("data", "key_screenshot.png"))
