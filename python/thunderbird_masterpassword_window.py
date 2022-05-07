@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QLineEdit
+from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QLineEdit, QPushButton
 from PyQt5 import QtGui
 import os
 
@@ -28,8 +28,14 @@ msg = QLabel("Please enter your Primary Password.", parent=window)
 msg.move(70, 30)
 
 textfield = QLineEdit(parent=window)
-textfield.move(70, 70)
-textfield.setMinimumWidth(300)
+textfield.move(70, 65)
+textfield.setMinimumWidth(305)
+
+cancel_button = QPushButton("Cancel", parent=window)
+cancel_button.setGeometry(200, 108, 85, 30)
+
+sign_in_button = QPushButton("Sign in", parent=window)
+sign_in_button.setGeometry(290, 108, 85, 30)
 
 window.show()
 
