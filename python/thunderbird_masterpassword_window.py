@@ -9,8 +9,10 @@ import os
 
 app = QApplication(sys.argv)
 window = QWidget()
+#FONT_SIZE = 9
 
 window.setWindowTitle("Password Required - Mozilla Thunderbird")
+#window.setFont(QtGui.QFont("Arial", FONT_SIZE))
 # TODO: Include the default22.png Thunderbird icon from a system directory,
 # depending on the previously determined installation path of Thunderbird.
 window.setWindowIcon(QtGui.QIcon(os.path.join("data", "default22.png")))
@@ -25,17 +27,21 @@ key.move(15,15)
 
 # TODO: Include the key icon from a system directory.
 msg = QLabel("Please enter your Primary Password.", parent=window)
-msg.move(70, 30)
+msg.move(75, 30)
 
 textfield = QLineEdit(parent=window)
 textfield.move(70, 65)
 textfield.setMinimumWidth(305)
 
 cancel_button = QPushButton("Cancel", parent=window)
+#cancel_button.setFont(QtGui.QFont("Arial", FONT_SIZE))
 cancel_button.setGeometry(200, 108, 85, 30)
 
 sign_in_button = QPushButton("Sign in", parent=window)
+#sign_in_button.setFont(QtGui.QFont("Arial", FONT_SIZE))
 sign_in_button.setGeometry(290, 108, 85, 30)
+sign_in_button.setFocus()
+# sign_in_button.setAutoDefault(True)
 
 window.show()
 
