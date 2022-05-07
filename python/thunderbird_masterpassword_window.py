@@ -1,7 +1,11 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QLabel, QWidget
+from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QLineEdit
 from PyQt5 import QtGui
 import os
+
+# TODO: Find out default language and show language depending on default language:
+# - German in default language is German
+# - English otherwise
 
 app = QApplication(sys.argv)
 window = QWidget()
@@ -22,6 +26,10 @@ key.move(15,15)
 # TODO: Include the key icon from a system directory.
 msg = QLabel("Please enter your Primary Password.", parent=window)
 msg.move(70, 30)
+
+textfield = QLineEdit(parent=window)
+textfield.move(70, 70)
+textfield.setMinimumWidth(300)
 
 window.show()
 
