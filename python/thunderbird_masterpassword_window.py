@@ -13,9 +13,15 @@ window.setWindowIcon(QtGui.QIcon(os.path.join("data", "default22.png")))
 window.setGeometry(100, 100, 390, 150)
 # TODO: Let the window sporn in the center of the screen.
 window.move(50, 50)
+
+key = QLabel(parent=window)
+pixmap = QtGui.QPixmap(os.path.join("data", "key_screenshot.png"))
+key.setPixmap(pixmap)
+key.move(15,15)
+
 # TODO: Include the key icon from a system directory.
 msg = QLabel("Please enter your Primary Password.", parent=window)
-msg.move(60, 30)
+msg.move(70, 30)
 
 window.show()
 
