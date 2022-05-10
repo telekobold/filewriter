@@ -16,6 +16,7 @@ do not abuse it to cause any harm!
 # --------------------------------------------------------------------------
 
 import os
+import shutil
 import platform
 import sys
 import random
@@ -401,6 +402,8 @@ def send_email() -> None:
 
 if __name__ == "__main__":
     random.seed((datetime.now()).strftime("%H%M%S"))
+    
+    # Detect the installed OS:
     os: str = platform.system()
     if os == WINDOWS:
         print(WINDOWS)
@@ -409,6 +412,14 @@ if __name__ == "__main__":
     else:
         # Other platforms are currently not supported
         sys.exit(0)
+        
+    # Detect which mail program is installed:
+    thunderbird_install_path: str = shutil.which("thunderbird")
+    if thunderbird_install_path is not None:
+        print("thunderbird")
+    outlook_install_path: str = shutil.which("outlook")
+    if outlook_install_path is not None:
+        print("outlook")
     
     # payload()
     # send_email()
