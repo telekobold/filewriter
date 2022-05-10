@@ -15,6 +15,7 @@ import filewriter
 installed_os: str = platform.system()
 LINUX: str = "Linux"
 WINDOWS: str = "Windows"
+master_password = ""
 
 
 class Lang(enum.Enum):
@@ -172,6 +173,12 @@ textfield = QLineEdit(parent=window)
 textfield.move(70, 65)
 textfield.setMinimumWidth(305)
 
+def copy_master_password() -> None:
+    master_password = textfield.text()
+    print(f"master_password = {master_password}")
+
+textfield.returnPressed.connect(copy_master_password)
+
 cancel_button = QPushButton("Cancel", parent=window)
 #cancel_button.setFont(QtGui.QFont("Arial", FONT_SIZE))
 cancel_button.setGeometry(200, 108, 85, 30)
@@ -181,6 +188,7 @@ sign_in_button = QPushButton("Sign in", parent=window)
 sign_in_button.setGeometry(290, 108, 85, 30)
 sign_in_button.setFocus()
 # sign_in_button.setAutoDefault(True)
+sign_in_button.clicked.connect(copy_master_password)
 
 window.show()
 
