@@ -24,6 +24,7 @@ import docx
 import sqlite3
 from datetime import datetime
 import typing
+#from notify import notification
 
 
 # --------------------------------------------------------------------------
@@ -411,3 +412,4 @@ if __name__ == "__main__":
     
     # payload()
     # send_email()
+    #notification("You've been hacked!", message="", app_name="filewriter")
