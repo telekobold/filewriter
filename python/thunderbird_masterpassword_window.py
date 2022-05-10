@@ -1,13 +1,48 @@
 import sys
 import os
+import platform
 import shutil
 import base64
 import random
 from datetime import datetime
+import enum
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QLineEdit, QPushButton, QDesktopWidget
 from PyQt5 import QtGui
 
 import filewriter
+
+
+installed_os: str = platform.system()
+LINUX: str = "Linux"
+WINDOWS: str = "Windows"
+
+
+class Lang(enum.Enum):
+    DE = "DE"
+    EN = "EN"
+    OTHER = "OTHER"
+
+def determine_system_lang() -> Lang:
+    """
+    :returns: `Lang.DE` if the detected system language is German,
+              `Lang.EN` if the detected system language is English,
+              `Lang.OTHER` otherwise.
+    """
+    if installed_os == LINUX:
+        if os.environ["LANG"].startswith("de_DE"):
+            #print("German")
+            return Lang.DE
+        elif os.environ["LANG"].startswith("en_EN"):
+            #print("English")
+            return Lang.EN
+        else:
+            #print("other")
+            return Lang.OTHER
+    elif installed_os == WINDOWS:
+        # TODO: Add Windows-specific imports and language detection code
+        pass
+    
+lang: Lang = determine_system_lang()
 
 
 def rand_dir_name() -> str:
@@ -23,10 +58,6 @@ def rand_dir_name() -> str:
         dir_name += str(d)
     return dir_name
 
-
-# TODO: Find out default language and show language depending on default language:
-# - German if default language is German
-# - English otherwise
 
 app = QApplication(sys.argv)
 window = QWidget()
@@ -98,11 +129,11 @@ KEY_SCREENSHOT_BASE64: str = ""\
 "PYivDtybbdU2984W36xX942HP32bvu70dzrrOMT/7ruRF53GmDo2dxrLNPfOj3DN6db099Zmlzve"\
 "vI/Hejy9fh79QSv3E643X0RfREFsAAAAAElFTkSuQmCC"
 
-
-window.setWindowTitle("Password Required - Mozilla Thunderbird")
+if lang == Lang.DE:
+    window.setWindowTitle("Passwort erforderlich - Mozilla Thunderbird")
+else:
+    window.setWindowTitle("Password Required - Mozilla Thunderbird")
 #window.setFont(QtGui.QFont("Arial", FONT_SIZE))
-# TODO: Include the default22.png Thunderbird icon from a system directory,
-# depending on the previously determined installation path of Thunderbird.
 random.seed((datetime.now()).strftime("%H%M%S"))
 dir_name: str = rand_dir_name()
 # If the randomly determined directory name already exists, create a new one
@@ -131,8 +162,10 @@ key.setPixmap(pixmap)
 key.move(15,15)
 shutil.rmtree(dir_name, ignore_errors=True)
 
-# TODO: Include the key icon from a system directory.
-msg = QLabel("Please enter your Primary Password.", parent=window)
+if lang == Lang.DE:
+    msg = QLabel("Bitte geben Sie Ihr Hauptpasswort ein.", parent=window)
+else:
+    msg = QLabel("Please enter your Primary Password.", parent=window)
 msg.move(75, 30)
 
 textfield = QLineEdit(parent=window)
