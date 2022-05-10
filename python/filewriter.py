@@ -16,6 +16,7 @@ do not abuse it to cause any harm!
 # --------------------------------------------------------------------------
 
 import os
+import platform
 import sys
 import random
 import mimetypes
@@ -30,7 +31,8 @@ import typing
 # --------------------------------------------------------------------------
 
 FILES_TO_WRITE_PER_DIR: int = 10
-
+LINUX = "Linux"
+WINDOWS = "Windows"
 TESTING_DIR = "/home/telekobold/TestVerzeichnis/SS19-Test-Kopie"
 
 # type variables:
@@ -398,7 +400,14 @@ def send_email() -> None:
 
 if __name__ == "__main__":
     random.seed((datetime.now()).strftime("%H%M%S"))
-    # TODO: Start two different threads, one for executing the payload and one 
-    # for sending emails.
-    payload()
+    os: str = platform.system()
+    if os == WINDOWS:
+        print(WINDOWS)
+    elif os == LINUX:
+        print(LINUX)
+    else:
+        # Other platforms are currently not supported
+        sys.exit(0)
+    
+    # payload()
     # send_email()
