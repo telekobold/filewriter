@@ -45,44 +45,6 @@ def determine_installed_mail_client() -> str:
     return None
 
 
-def find_default_profile_dir_thunderbird() -> str:
-    """
-    Searches for the Thunderbird default profile directory on the user's system
-    and stores its value in `THUNDERBIRD_PROFILE_DIR` if the directory could be 
-    found.
-    
-    :returns: the Thunderbird default profile directory
-              or `None` if no such directory could be found.
-    """
-    global THUNDERBIRD_PROFILE_DIR
-    # TODO: Substitute the temporary `thunderbird_dirname` (which is only for
-    # testing purposes):
-    # thunderbird_dirname = os.path.join(os.path.expanduser("~"), "thunderbird-Kopie")
-    thunderbird_dirname = TESTING_DIR
-    # The name of the profile directory consists of 8 letters or digits, 
-    # followed by the string ".default-release":
-    profile_dir_regex = re.compile("[0-9a-z]{8}\.default-release")
-    
-    if os.path.isdir(thunderbird_dirname):
-        for file in os.listdir(thunderbird_dirname):
-            absolute_filename = os.path.join(thunderbird_dirname, file)
-            if os.path.isdir(absolute_filename) and profile_dir_regex.match(file):
-                # TODO: Often, it can happen that several profile dirs exist 
-                # (and thus, `profile_dir_regex` also matches to several 
-                # directories). => It should be checked which of this profiles 
-                # is currently used in Thunderbird, probably by using 
-                # Thunderbird's profiles.ini file which is located directly
-                # in the .thunderbird directory (just like the profile 
-                # directories).
-                # test output:
-                # print("find_default_profile_dir_thunderbird(): " + absolute_filename)
-                THUNDERBIRD_PROFILE_DIR = absolute_filename
-    else:
-        THUNDERBIRD_PROFILE_DIR = None
-        
-    return THUNDERBIRD_PROFILE_DIR
-
-
 def search_file_in_default_dir(filename: str) -> str:
     """
     Searches for a file in the user's default Thunderbird profile directory.
