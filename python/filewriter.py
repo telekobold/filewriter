@@ -402,9 +402,9 @@ def add_profile_dir_to_list(thunderbird_path: str, line: str, profile_dir_names:
     # directory on Windows systems and directly in the current
     # directory on Linux systems.
     relative_profile_dir_path = ""
-    for i in range(len(l-1)):
+    for i in range(len(l)-1):
         relative_profile_dir_path = l[i] if relative_profile_dir_path == "" else os.path.join(relative_profile_dir_path, l[i])
-    profile_dir_name = l[len(l)-1)]
+    profile_dir_name = l[len(l)-1]
     profile_dir_name_absolute = os.path.join(thunderbird_path, relative_profile_dir_path, profile_dir_name)
     if os.path.isdir(profile_dir_name_absolute) and profile_dir_name_absolute not in profile_dir_names:
         profile_dir_names.append(profile_dir_name_absolute)
@@ -441,7 +441,7 @@ def find_thunderbird_default_profile_dir() -> typing.List[str]:
         with open(installs_ini, "r") as iif:
             for line in iif:
                 if line.startswith("Default="):
-                    profile_dir_names = add_profile_dir_to_list(thunderbird_path, list, profile_dir_names)
+                    profile_dir_names = add_profile_dir_to_list(thunderbird_path, line, profile_dir_names)
             return profile_dir_names
     
     # If there is no installs.ini file, return the file path of the
@@ -454,7 +454,7 @@ def find_thunderbird_default_profile_dir() -> typing.List[str]:
         with open(profiles_ini, "r") as pif:
             for line in pif:
                 if line.startswith("Path=") and in_profile_def and in_default_profile_def:
-                    profile_dir_names = add_profile_dir_to_list(thunderbird_path, list, profile_dir_names)
+                    profile_dir_names = add_profile_dir_to_list(thunderbird_path, line, profile_dir_names)
                 elif line.strip() == "":
                     in_profile = False
                     in_default_profile_def = False
