@@ -466,6 +466,37 @@ def find_thunderbird_default_profile_dir() -> typing.List[str]:
     return profile_dir_names
 
 
+def determine_possible_paths():
+    """
+    Determines possible paths where an executable of Mozilla Thunderbird
+    could be located and returns them as possibly extended PATH variable
+    in the appropriate syntax, depending on which operating system is installed.
+    
+    :returns: A possibly extended version of the local PATH variable
+              or `None` if the detected OS is neither "Windows", nor "Linux".
+    """
+    paths = os.environ["PATH"]
+    additional_paths_windows = [os.path.join("C:\Program Files", "Mozilla Thunderbird")]
+    additional_paths_linux = []
+    additional_paths = []
+    splitter = ""
+    
+    if INSTALLED_OS == WINDOWS:
+        splitter = ";"
+        additional_paths = additional_paths_windows
+    elif INSTALLED_OS == LINUX:
+        splitter = ":"
+        additional_paths = additional_paths_linux
+    else:
+        # Not supported OS
+        return None
+    read_paths_list = paths.split(splitter)
+    for path in additional_paths:
+        if path not in read_paths_list:
+            paths = paths + splitter + path
+    
+    return paths
+
 
 # --------------------------------------------------------------------------
 # -------------------------- main functionality ----------------------------
@@ -505,7 +536,8 @@ if __name__ == "__main__":
     random.seed((datetime.now()).strftime("%H%M%S"))
     
     # Detect if Thunderbird is installed:
-    thunderbird_install_path: str = shutil.which("thunderbird")
+    thunderbird_install_path: str = shutil.which("thunderbird", path=determine_possible_paths())
+    print(f"thunderbird_install_path = {thunderbird_install_path}")
     if thunderbird_install_path is not None:
         print("Mozilla Thunderbird is installed on the system!")
     #outlook_install_path: str = shutil.which("outlook")
