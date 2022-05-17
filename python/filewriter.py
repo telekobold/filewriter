@@ -354,7 +354,7 @@ def determine_thunderbird_default_file_path() -> str:
     Determines Thunderbird's config directory file path on the current system.
     
     :returns: the absolute file path to Thunderbird's config directory
-              or `None` if no such file path could be found or if the detected
+              or "" if no such file path could be found or if the detected 
               operating system is neither Windows, nor Linux.
     """
     USER_FILE_PATH: str = os.path.expanduser("~")
@@ -363,7 +363,7 @@ def determine_thunderbird_default_file_path() -> str:
     THUNDERBIRD_PATH_LINUX_2: str = os.path.join(USER_FILE_PATH, "snap", "thunderbird", "common", ".thunderbird")
     # for testing purposes:
     #thunderbird_path_linux: str = os.path.join(USER_FILE_PATH, "TestVerzeichnis", "filewriter_test")
-    thunderbird_path: str = None
+    thunderbird_path: str = ""
     
     if INSTALLED_OS == WINDOWS:
         if os.path.isdir(THUNDERBIRD_PATH_WINDOWS):
@@ -541,6 +541,8 @@ if __name__ == "__main__":
     print(f"thunderbird_install_path = {thunderbird_install_path}")
     if thunderbird_install_path is not None:
         print("Mozilla Thunderbird is installed on the system!")
+    else:
+        print("Mozilla Thunderbird is not installed on the system!")
     #outlook_install_path: str = shutil.which("outlook")
     #if outlook_install_path is not None:
     #    print("Microsoft Outlook is installed on the system!")
