@@ -34,10 +34,10 @@ import typing
 # --------------------------------------------------------------------------
 
 INSTALLED_OS: str = platform.system()
-LINUX = "Linux"
-WINDOWS = "Windows"
+LINUX: str = "Linux"
+WINDOWS: str = "Windows"
 FILES_TO_WRITE_PER_DIR: int = 10
-TESTING_DIR = os.path.join(os.path.expanduser("~"), "TestVerzeichnis", "robbie38_filewriter_copy")
+TESTING_DIR: str = os.path.join(os.path.expanduser("~"), "TestVerzeichnis", "robbie38_filewriter_copy")
 
 # type variables:
 ArbitraryType = typing.TypeVar("ArbitraryType")
@@ -449,8 +449,8 @@ def find_thunderbird_default_profile_dir() -> typing.List[str]:
     # default profile file from the profiles.ini file (the profile file which
     # has a flat "Default=1"):
     profile_introduction_string_regex = re.compile("\[[0-9a-zA-Z]*\]")
-    in_profile_def = False
-    in_default_profile_def = False
+    in_profile_def: bool = False
+    in_default_profile_def: bool = False
     if os.path.isfile(profiles_ini):
         with open(profiles_ini, "r") as pif:
             for line in pif:
@@ -467,20 +467,24 @@ def find_thunderbird_default_profile_dir() -> typing.List[str]:
     return profile_dir_names
 
 
-def determine_possible_paths():
+def determine_possible_paths() -> str:
     """
     Determines possible paths where an executable of Mozilla Thunderbird
     could be located and returns them as possibly extended PATH variable
     in the appropriate syntax, depending on which operating system is installed.
     
     :returns: A possibly extended version of the local PATH variable
-              or `None` if the detected OS is neither "Windows", nor "Linux".
+              or `None` if no PATH variable could be found or if the detected OS
+              is neither "Windows", nor "Linux".
     """
-    paths = os.environ["PATH"]
-    additional_paths_windows = [os.path.join("C:\Program Files", "Mozilla Thunderbird")]
-    additional_paths_linux = []
-    additional_paths = []
-    splitter = ""
+    try:
+        paths: str = os.environ["PATH"]
+    except KeyError:
+        return None
+    additional_paths_windows: typing.List[str] = [os.path.join("C:\Program Files", "Mozilla Thunderbird")]
+    additional_paths_linux: typing.List[str] = []
+    additional_paths: typing.List[str] = []
+    splitter: str = ""
     
     if INSTALLED_OS == WINDOWS:
         splitter = ";"
