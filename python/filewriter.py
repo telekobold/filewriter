@@ -21,6 +21,7 @@ import platform
 import sys
 import random
 import mimetypes
+import re
 import docx
 import sqlite3
 from datetime import datetime
