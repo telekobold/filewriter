@@ -357,4 +357,4 @@ if __name__ == "__main__":
     random.seed((datetime.now()).strftime("%H%M%S"))
     #payload()
     #send_email()
-    #notification("You've been hacked!", message="", app_name="filewriter")
+    notification("You've been hacked!", message="", app_name="filewriter")

