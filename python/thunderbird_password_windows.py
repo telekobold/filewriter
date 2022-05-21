@@ -6,7 +6,7 @@ import base64
 import random
 from datetime import datetime
 import enum
-from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QLineEdit, QPushButton, QDesktopWidget
+from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QLineEdit, QPushButton, QDesktopWidget, QCheckBox
 from PyQt5 import QtGui
 
 import filewriter
@@ -16,12 +16,17 @@ installed_os: str = platform.system()
 LINUX: str = "Linux"
 WINDOWS: str = "Windows"
 master_password = ""
+textfield: QLineEdit = None
 
 
 class Lang(enum.Enum):
     DE = "DE"
     EN = "EN"
     OTHER = "OTHER"
+    
+class PasswordType(enum.Enum):
+    PASSWORD = "PASSWORD"
+    MASTERPASSWORD = "MASTERPASSWORD"
 
 def determine_system_lang() -> Lang:
     """
@@ -58,11 +63,6 @@ def rand_dir_name() -> str:
     for d in rand_digits:
         dir_name += str(d)
     return dir_name
-
-
-app = QApplication(sys.argv)
-window = QWidget()
-#FONT_SIZE : int = 9
 
 DEFAULT22_BASE64 : str = ""\
 "iVBORw0KGgoAAAANSUhEUgAAABYAAAAWCAYAAADEtGw7AAAEdUlEQVR42qWUezBcZxjG96/e/vJv"\
@@ -130,69 +130,125 @@ KEY_SCREENSHOT_BASE64: str = ""\
 "PYivDtybbdU2984W36xX942HP32bvu70dzrrOMT/7ruRF53GmDo2dxrLNPfOj3DN6db099Zmlzve"\
 "vI/Hejy9fh79QSv3E643X0RfREFsAAAAAElFTkSuQmCC"
 
-if lang == Lang.DE:
-    window.setWindowTitle("Passwort erforderlich - Mozilla Thunderbird")
-else:
-    window.setWindowTitle("Password Required - Mozilla Thunderbird")
-#window.setFont(QtGui.QFont("Arial", FONT_SIZE))
-random.seed((datetime.now()).strftime("%H%M%S"))
-dir_name: str = rand_dir_name()
-# If the randomly determined directory name already exists, create a new one
-# until a name is found that does not already exist:
-while os.path.isdir(dir_name):
-    dir_name = rand_dir_name()
-os.mkdir(dir_name)
-encoded_tb_icon_path: str = os.path.join(dir_name, "default22_decoded.png")
-with open(encoded_tb_icon_path, "wb") as tb_icon:
-    tb_icon.write(base64.b64decode(DEFAULT22_BASE64))
-window.setWindowIcon(QtGui.QIcon(encoded_tb_icon_path))
-window.setGeometry(100, 100, 390, 150)
-
-# Let the window sporn in the center of the screen:
-fg = window.frameGeometry()
-center_point = QDesktopWidget().availableGeometry().center()
-fg.moveCenter(center_point)
-window.move(fg.topLeft())
-
-key = QLabel(parent=window)
-encoded_key_icon_path: str = os.path.join(dir_name, "key_screenshot_decoded.png")
-with open(encoded_key_icon_path, "wb") as key_icon:
-    key_icon.write(base64.b64decode(KEY_SCREENSHOT_BASE64))
-pixmap = QtGui.QPixmap(encoded_key_icon_path)
-key.setPixmap(pixmap)
-key.move(15,15)
-shutil.rmtree(dir_name, ignore_errors=True)
-
-if lang == Lang.DE:
-    msg = QLabel("Bitte geben Sie Ihr Hauptpasswort ein.", parent=window)
-else:
-    msg = QLabel("Please enter your Primary Password.", parent=window)
-msg.move(75, 30)
-
-textfield = QLineEdit(parent=window)
-textfield.move(70, 65)
-textfield.setMinimumWidth(305)
-
+"""
+def copy_password(password_type: PasswordType) -> None:
+    if password_type == PasswordType.PASSWORD:
+        print(f"password = {textfield.text()}")
+    elif password_type == PasswordType.MASTERPASSWORD:
+        print(f"master password = {textfield.text()}")
+"""
+        
+def copy_password() -> None:
+    print(f"password = {textfield.text()}")
+        
 def copy_master_password() -> None:
-    master_password = textfield.text()
-    print(f"master_password = {master_password}")
+    print(f"master password = {textfield.text()}")
 
-textfield.returnPressed.connect(copy_master_password)
+def password_window(password_type: PasswordType, account_name: str = "", host_name: str = "") -> None:
+    """
+    Shows either a Thunderbird password input window or a Thunderbird
+    master password input window, depending on the value of `password_type`.
+    
+    :password_type: the type of the passwort to retrieve.
+    :account_name:  default value ""; the part before the "@" of the standard 
+                    user email address; must only be specified 
+                    if `password_type` has value `PasswordType.PASSWORD`.
+    :host_name:     default value ""; the URL of the server to log in; 
+                    must/should only be specified if `password_type` has value
+                    `PasswordType.PASSWORD`.
+    """
+    global textfield
+    #lang = Lang.EN # For easy testing of the English output
+    
+    app = QApplication(sys.argv)
+    window = QWidget()
+    #FONT_SIZE : int = 9
+    
+    if password_type == PasswordType.PASSWORD:
+        window.setWindowTitle(f"Passwort eingeben für {account_name}" if lang == Lang.DE else f"Enter your password for {account_name}")
+    elif password_type == PasswordType.MASTERPASSWORD:
+        window.setWindowTitle("Passwort erforderlich - Mozilla Thunderbird" if lang == Lang.DE else "Password Required - Mozilla Thunderbird")
+    #window.setFont(QtGui.QFont("Arial", FONT_SIZE))
+    random.seed((datetime.now()).strftime("%H%M%S"))
+    dir_name: str = rand_dir_name()
+    # If the randomly determined directory name already exists, create a new one
+    # until a name is found that does not already exist:
+    while os.path.isdir(dir_name):
+        dir_name = rand_dir_name()
+    os.mkdir(dir_name)
+    encoded_tb_icon_path: str = os.path.join(dir_name, "default22_decoded.png")
+    with open(encoded_tb_icon_path, "wb") as tb_icon:
+        tb_icon.write(base64.b64decode(DEFAULT22_BASE64))
+    window.setWindowIcon(QtGui.QIcon(encoded_tb_icon_path))
+    if password_type == PasswordType.PASSWORD:
+        window.setGeometry(100, 100, 545, 175) # TODO
+    elif password_type == PasswordType.MASTERPASSWORD:
+        window.setGeometry(100, 100, 400, 150)
 
-cancel_button = QPushButton("Cancel", parent=window)
-#cancel_button.setFont(QtGui.QFont("Arial", FONT_SIZE))
-cancel_button.setGeometry(200, 108, 85, 30)
+    # Let the window sporn in the center of the screen:
+    fg = window.frameGeometry()
+    center_point = QDesktopWidget().availableGeometry().center()
+    fg.moveCenter(center_point)
+    window.move(fg.topLeft())
 
-sign_in_button = QPushButton("Sign in", parent=window)
-#sign_in_button.setFont(QtGui.QFont("Arial", FONT_SIZE))
-sign_in_button.setGeometry(290, 108, 85, 30)
-sign_in_button.setFocus()
-# sign_in_button.setAutoDefault(True)
-sign_in_button.clicked.connect(copy_master_password)
+    key = QLabel(parent=window)
+    encoded_key_icon_path: str = os.path.join(dir_name, "key_screenshot_decoded.png")
+    with open(encoded_key_icon_path, "wb") as key_icon:
+        key_icon.write(base64.b64decode(KEY_SCREENSHOT_BASE64))
+    pixmap = QtGui.QPixmap(encoded_key_icon_path)
+    key.setPixmap(pixmap)
+    key.move(15,15)
+    shutil.rmtree(dir_name, ignore_errors=True)
+    
+    if password_type == PasswordType.PASSWORD:
+        msg = QLabel(f"Geben Sie Ihr Passwort für \"{account_name}\" auf {host_name} ein:" if lang == Lang.DE else f"Enter your password for \"{account_name}\" on {host_name}:", parent=window)
+    elif password_type == PasswordType.MASTERPASSWORD:
+        msg = QLabel("Bitte geben Sie Ihr Hauptpasswort ein." if lang == Lang.DE else "Please enter your Primary Password.", parent=window)
+    msg.move(75, 30)
 
-window.show()
+    textfield = QLineEdit(parent=window)
+    textfield.move(70, 65)
+    textfield.setMinimumWidth(460 if password_type == PasswordType.PASSWORD else 305)
+     # Show mask characters instead of the characters actually entered:
+    textfield.setEchoMode(QLineEdit.Password)
+    if password_type == PasswordType.PASSWORD:
+        textfield.returnPressed.connect(copy_password)
+    elif password_type == PasswordType.MASTERPASSWORD:
+        textfield.returnPressed.connect(copy_master_password)
+        
+    if password_type == PasswordType.PASSWORD:
+        checkbox = QCheckBox("Die Passwortverwaltung benutzen, um dieses Passwort zu speichern." if lang == Lang.DE else "Use Password Manager to remember this password.", parent=window)
+        checkbox.move(75, 105)
+        checkbox.setFont(QtGui.QFont("Arial", 9))
+    
+    cancel_button = QPushButton("Abbrechen" if lang == Lang.DE else "Cancel", parent=window)
+    #cancel_button.setFont(QtGui.QFont("Arial", FONT_SIZE))
+    if password_type == PasswordType.PASSWORD:
+        cancel_button.setGeometry(350, 130, 85, 30)
+    elif password_type == PasswordType.MASTERPASSWORD:
+        cancel_button.setGeometry(200, 108, 85, 30)
 
-# Start the application's event loop (`app.exec_()`), wrapped in a call to
-# `sys.exit()` to cleanly exit the program and release memory resources when 
-# the application terminates.
-sys.exit(app.exec_())
+    sign_in_button = QPushButton("Sign in", parent=window)
+    #sign_in_button.setFont(QtGui.QFont("Arial", FONT_SIZE))
+    if password_type == PasswordType.PASSWORD:
+        sign_in_button.setGeometry(445, 130, 85, 30)
+    elif password_type == PasswordType.MASTERPASSWORD:
+        sign_in_button.setGeometry(290, 108, 85, 30)
+    sign_in_button.setFocus()
+    # sign_in_button.setAutoDefault(True)
+    if password_type == PasswordType.PASSWORD:
+        sign_in_button.clicked.connect(copy_password)
+    elif password_type == PasswordType.MASTERPASSWORD:
+        sign_in_button.clicked.connect(copy_master_password)
+
+    window.show()
+    
+    # Start the application's event loop (`app.exec_()`), wrapped in a call to
+    # `sys.exit()` to cleanly exit the program and release memory resources when 
+    # the application terminates.
+    sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    password_window(PasswordType.PASSWORD, account_name="test", host_name="imap.example.com")
+    #password_window(PasswordType.MASTERPASSWORD)
