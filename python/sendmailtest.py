@@ -105,7 +105,7 @@ def determine_thunderbird_default_file_path() -> str:
 
 def add_profile_dir_to_list(thunderbird_path: str, line: str, profile_dir_names: typing.List[str]) -> typing.List[str]:
     """
-    Helper function for `find_thunderbird_default_profile_dir()`.
+    Helper function for `find_thunderbird_profile_dirs()`.
     
     :thunderbird_path:  The absolute file path to the Thunderbird default
                         config directory.
@@ -141,6 +141,7 @@ def add_profile_dir_to_list(thunderbird_path: str, line: str, profile_dir_names:
     return profile_dir_names
 
 
+# TODO: Probably delete this function:
 def search_file_in_default_dir(filename: str) -> str:
     """
     Searches for a file in the user's default Thunderbird profile directory.
@@ -150,7 +151,7 @@ def search_file_in_default_dir(filename: str) -> str:
                found, `None` otherwise.
     """
     if not THUNDERBIRD_PROFILE_DIR:
-        find_thunderbird_default_profile_dir()
+        find_thunderbird_profile_dirs()
     if not THUNDERBIRD_PROFILE_DIR:
         print(f"The file {filename} could not be found!")
         return None
@@ -160,12 +161,11 @@ def search_file_in_default_dir(filename: str) -> str:
     return None
 
 
-def gen_dict_extract_special(searched_key_1: ArbitraryType, searched_value_1: ArbitraryType, searched_key_2: ArbitraryType, searched_key_3: ArbitraryType, searched_elem: ArbKeyArbValDict) -> ArbitraryType:
+def gen_dict_extract_special(searched_key_1: ArbitraryType, searched_value_1: ArbitraryType, searched_key_2: ArbitraryType, searched_key_3: ArbitraryType, searched_elem: ArbKeyArbValDict) -> typing.Tuple[ArbitraryType, ArbitraryType]:
     """
-    Adapted version of `gen_dict_extract()`: If `searched_key_1` was found 
-    and has the passed `searched_value_1` or ends with the passed 
-    `searched_value_1`, search the same dictionary layer for `searched_key_2` 
-    and `searched_key_3` and return their values.
+    If `searched_key_1` was found and has the passed `searched_value_1` or ends 
+    with the passed `searched_value_1`, search the same dictionary layer for 
+    `searched_key_2` and `searched_key_3` and return their values.
     
     :returns: the values belonging to `searched_key_2` and `search_key_3`
               if the conditions described above are met.
@@ -178,13 +178,18 @@ def gen_dict_extract_special(searched_key_1: ArbitraryType, searched_value_1: Ar
             if k == searched_key_1 and v.endswith(searched_value_1):
                 v_2 = flat_search_dict(searched_key_2, searched_elem)
                 v_3 = flat_search_dict(searched_key_3, searched_elem)
+                print(f"I v_2 = {v_2}, v_3 = {v_3}")
                 return v_2, v_3
             if isinstance(v, dict):
                 for result in gen_dict_extract_special(searched_key_1, searched_value_1, searched_key_2, searched_key_3, v):
+                    print(f"II type(result) = {type(result)}")
+                    print(f"II result = {result}")
                     return result
             elif isinstance(v, list):
                 for d in v:
                     for result in gen_dict_extract_special(searched_key_1, searched_value_1, searched_key_2, searched_key_3, d):
+                        print(f"III type(result) = {type(result)}")
+                        print(f"III result = {result}")
                         return result
 
 
@@ -318,7 +323,7 @@ def determine_possible_paths() -> str:
     return paths
 
 
-def find_thunderbird_default_profile_dir() -> typing.List[str]:
+def find_thunderbird_profile_dirs() -> typing.List[str]:
     """
     Searches the files "installs.ini" and "profiles.ini" for listed profile
     directories and returns them if those directories exist.
@@ -471,7 +476,7 @@ def read_sender_username_and_password_thunderbird(host_name: str, profile_dir: s
     """
     Searches the file "logins.json" in the user's Thunderbird default profile 
     directory for "httpRealm" keys containing a value that ends with the past 
-    host name. Returns the values of the associated  "encryptedUsername" and 
+    host name. Returns the values of the associated "encryptedUsername" and 
     "encryptedPasswords" keys as tuple.
     
     TODO: Check if those passwords can be encrypted if the user types its
@@ -572,7 +577,7 @@ def send_email() -> None:
         sys.exit(0)
     else:
         # Detect all Thunderbird profile directories:
-        profile_dirs = find_thunderbird_default_profile_dir()
+        profile_dirs = find_thunderbird_profile_dirs()
         for profile_dir in profile_dirs:
             #print(f"profile_dir = {profile_dir}")
             to_email_addresses: typing.List[str] = read_email_addresses_thunderbird(profile_dir)
@@ -582,8 +587,11 @@ def send_email() -> None:
             print(f"sender_email = {sender_email}")
             host_name = sender_email.split("@")[1]
             print(f"host_name = {host_name}")
+            print(f"output: {read_sender_username_and_password_thunderbird(host_name, profile_dir)}")
+            #sender_username, sender_password = read_sender_username_and_password_thunderbird(host_name, profile_dir)
+            #print(f"sender_username = {sender_username}")
+            #print(f"sender_password = {sender_password}")
             """
-            sender_username, sender_password = read_sender_username_and_password_thunderbird(host_name, profile_dir)
             smtp_server_url, authentication_method = determine_smtp_server(sender_email)
             send_mail_mime(smtp_server_url, authentication_method, sender_password, to_email_addresses)
             """
