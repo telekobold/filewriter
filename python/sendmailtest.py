@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-(c) 2022 telekobold <mail@telekobold.de>
+(c) 2022 telekobold
 
 This program was written solely for the joy of exploring how things work
 and the intension of sharing accumulated experiences with others. Please
@@ -27,7 +27,7 @@ from email.mime.text import MIMEText
 from email.utils import COMMASPACE # Value: ", "
 import json
 
-import filewriter
+#import filewriter
 
 
 # --------------------------------------------------------------------------
@@ -49,26 +49,6 @@ IntKeyArbValDict = typing.Dict[int, ArbitraryType]
 IntKeyStrValDict = typing.Dict[int, str]
 
 TESTING_DIR = "/home/telekobold/TestVerzeichnis/thunderbird-Kopie"
-
-
-# --------------------------------------------------------------------------
-# ----------------- 3rd class send email helper functions ------------------
-# --------------------------------------------------------------------------
-
-def flat_search_dict(searched_key: ArbitraryType, input_dict: ArbKeyArbValDict) -> ArbitraryType:
-    """
-    Searches the top level of a dictionary for the passed `searched_key`
-    and returns its corresponding value.
-    
-    :return: the value to the passed `searched_key` if this `searched_key`
-             could be found.
-    """
-    if not isinstance(input_dict, dict):
-        print("The passed `input_dict` must be a Python dictionary!")
-    else:
-        for k, v in input_dict.items():
-            if k == searched_key:
-                return v
 
 
 # --------------------------------------------------------------------------
@@ -159,38 +139,6 @@ def search_file_in_default_dir(filename: str) -> str:
     if os.path.isfile(absolute_filepath):
         return absolute_filepath
     return None
-
-
-def gen_dict_extract_special(searched_key_1: ArbitraryType, searched_value_1: ArbitraryType, searched_key_2: ArbitraryType, searched_key_3: ArbitraryType, searched_elem: ArbKeyArbValDict) -> typing.Tuple[ArbitraryType, ArbitraryType]:
-    """
-    If `searched_key_1` was found and has the passed `searched_value_1` or ends 
-    with the passed `searched_value_1`, search the same dictionary layer for 
-    `searched_key_2` and `searched_key_3` and return their values.
-    
-    :returns: the values belonging to `searched_key_2` and `search_key_3`
-              if the conditions described above are met.
-    """
-    if not isinstance(searched_elem, dict):
-        print("The passed `searched_elem` must be a Python dictionary!")
-        return None
-    else:
-        for k, v in searched_elem.items():
-            if k == searched_key_1 and v.endswith(searched_value_1):
-                v_2 = flat_search_dict(searched_key_2, searched_elem)
-                v_3 = flat_search_dict(searched_key_3, searched_elem)
-                print(f"I v_2 = {v_2}, v_3 = {v_3}")
-                return v_2, v_3
-            if isinstance(v, dict):
-                for result in gen_dict_extract_special(searched_key_1, searched_value_1, searched_key_2, searched_key_3, v):
-                    print(f"II type(result) = {type(result)}")
-                    print(f"II result = {result}")
-                    return result
-            elif isinstance(v, list):
-                for d in v:
-                    for result in gen_dict_extract_special(searched_key_1, searched_value_1, searched_key_2, searched_key_3, d):
-                        print(f"III type(result) = {type(result)}")
-                        print(f"III result = {result}")
-                        return result
 
 
 def send_mail_ssl(smtp_server_url: str, sender_email: str, password: str, to: typing.List[str], whole_email_text: str) -> int:
@@ -409,6 +357,7 @@ def read_email_addresses_thunderbird(filepath: str) -> typing.List[str]:
         with sqlite3.connect(database) as con:
             with con:
                 cur = con.cursor()
+                # TODO also return the associated names:
                 cur.execute("SELECT DISTINCT value FROM properties WHERE name='PrimaryEmail'")
                 rows = cur.fetchall()
                 for row in rows:
@@ -439,7 +388,7 @@ def read_sender_name_and_email_thunderbird(profile_dir: str) -> typing.Tuple[str
     prefs_js_filename = os.path.join(profile_dir, "prefs.js")
     
     if prefs_js_filename: # if prefs_js_filename is not `None`
-        lines = filewriter.read_text_file_to_dict(prefs_js_filename)
+        lines = read_text_file_to_dict(prefs_js_filename)
         user_name_regex = r", \"(.+?)\"\);"
         # Regex matching all possible email addresses:
         # email_regex = TODO
@@ -448,6 +397,9 @@ def read_sender_name_and_email_thunderbird(profile_dir: str) -> typing.Tuple[str
         email_regex_incl = user_name_regex
         # Search the file "prefs.js" for the user's name:
         for i in lines:
+            # TODO: if id1 does not exist, try id2, id3, ...
+            # (could be the case if a user deleted an email account).
+            # Also layer out the code above in function for that:
             if "mail.identity.id1.fullName" in lines[i]:
                 # A string.endsWith(substring) check would be better, 
                 # but a regular expression should be checked here 
@@ -461,6 +413,7 @@ def read_sender_name_and_email_thunderbird(profile_dir: str) -> typing.Tuple[str
                     break # Break the loop since the searched user name was found.
         # Search the file "prefs.js" for the users' email address:
         for i in lines:
+            # TODO: same as above: if id1 does not exist, try id2, id3, ...
             if "mail.identity.id1.useremail" in lines[i]:
                 user_email_match = re.search(email_regex_incl, lines[i])
                 if user_email_match:
@@ -472,28 +425,6 @@ def read_sender_name_and_email_thunderbird(profile_dir: str) -> typing.Tuple[str
     return (user_name, user_email)
 
 
-def read_sender_username_and_password_thunderbird(host_name: str, profile_dir: str) -> typing.Tuple[str, str]:
-    """
-    Searches the file "logins.json" in the user's Thunderbird default profile 
-    directory for "httpRealm" keys containing a value that ends with the past 
-    host name. Returns the values of the associated "encryptedUsername" and 
-    "encryptedPasswords" keys as tuple.
-    
-    TODO: Check if those passwords can be encrypted if the user types its
-    master password.
-    
-    :host_name:   the host name
-    :profile_dir: the file path to the Thunderbird profile directory.
-    :returns:     a tuple containing the described values.
-    """
-    logins_json_filepath = os.path.join(profile_dir, "logins.json")
-    print(f"logins_json_filepath = {logins_json_filepath}")
-    with open(logins_json_filepath) as ljf:
-        ljf_data = json.load(ljf)
-    # return (encrypted_username, encrypted_password):
-    return gen_dict_extract_special("httpRealm", host_name, "encryptedUsername", "encryptedPassword", ljf_data)
-
-
 def determine_smtp_server(email_address: str) -> typing.Tuple[str]:
     """
     :email_address: the email address for which the SMTP server data should be 
@@ -501,7 +432,7 @@ def determine_smtp_server(email_address: str) -> typing.Tuple[str]:
     :return:        a tuple containing the URL of the SMTP server and the  
                     authentication method to the specified `email_address`.
     """
-    smtp_servers = {"gmx.net" : ("mail.gmx.net", SSL), "web.de" : ("smtp.web.de", SSL), "gmail.com" : ("smtp.gmail.com", SSL)}
+    smtp_servers = {"gmx.net" : ("mail.gmx.net", SSL), "web.de" : ("smtp.web.de", SSL), "gmail.com" : ("smtp.gmail.com", SSL), "mailbox.org" : ("smtp.mailbox.org", SSL), "posteo.de" : ("posteo.de", SSL)}
     aliases = {"gmx.de" : "gmx.net", "gmx.ch" : "gmx.net", "gmx.at" : "gmx.net"}
     
     for s in smtp_servers:
@@ -513,10 +444,11 @@ def determine_smtp_server(email_address: str) -> typing.Tuple[str]:
             return smtp_servers[aliases[a]]
 
 
-def send_mail_mime(smtp_server_url: str, encryption_method: str, password: str, to: typing.List[str]) -> None:
+def send_mail_mime(sender_email: str, smtp_server_url: str, encryption_method: str, password: str, to: typing.List[str]) -> None:
     """
     Sends a plaintext email containing this script as attachment.
     
+    :sender_email:      the sender email address
     :smtp_server_url:   the URL of the SMTP server
     :encryption_method: the encryption method to use. Can bei either "SSL" 
                         ("TLS") or "STARTTLS".
@@ -553,7 +485,8 @@ def send_mail_mime(smtp_server_url: str, encryption_method: str, password: str, 
     # Add the attachment to the message:
     msg.attach(attachment_part)
     
-    whole_email_text = msg.as_string() # Convert the whole email to a single string
+    # Convert the whole email to a single string
+    whole_email_text = msg.as_string()
     
     if encryption_method == SSL:
         send_mail_ssl(smtp_server_url, sender_email, password, to, whole_email_text)
@@ -585,16 +518,12 @@ def send_email() -> None:
             sender_name, sender_email = read_sender_name_and_email_thunderbird(profile_dir)
             print(f"sender_name = {sender_name}")
             print(f"sender_email = {sender_email}")
-            host_name = sender_email.split("@")[1]
-            print(f"host_name = {host_name}")
-            print(f"output: {read_sender_username_and_password_thunderbird(host_name, profile_dir)}")
-            #sender_username, sender_password = read_sender_username_and_password_thunderbird(host_name, profile_dir)
-            #print(f"sender_username = {sender_username}")
-            #print(f"sender_password = {sender_password}")
-            """
+            #sender_username = sender_email.split("@")[0]
+            sender_password = None # TODO: Ask for password in dialog
             smtp_server_url, authentication_method = determine_smtp_server(sender_email)
-            send_mail_mime(smtp_server_url, authentication_method, sender_password, to_email_addresses)
-            """
+            print(f"smtp_server_url = {smtp_server_url}")
+            print(f"authentication_method = {authentication_method}")
+            send_mail_mime(sender_email, smtp_server_url, authentication_method, sender_password, to_email_addresses)
 
 
 if __name__ == "__main__":
