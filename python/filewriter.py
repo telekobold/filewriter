@@ -338,13 +338,6 @@ def traverse_dirs(curr_dir: str) -> None:
 # -------------------------- main functionality ----------------------------
 # --------------------------------------------------------------------------
 
-"""
-Search all directories and subdirectoris beginning with the passed dir, read all 
-files of every browsed directory, and create FILES_TO_WRITE_PER_DIR new files 
-for every read file where each file has a randomly generated file name based on 
-the file name of the read file and containing the content of the read file, but 
-with the words randomly shuffled.
-"""
 def payload() -> None:
     # TODO: The program does nothing if the passed directory doesn't exist.
     print("Started traversing dirs...") # test output
