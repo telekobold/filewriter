@@ -379,9 +379,10 @@ def read_sender_name_and_email_thunderbird(profile_dir: str) -> typing.Tuple[str
                   These values can each be `None` if no corresponding value 
                   could be found.
     """
-    # The user's full name is stored in the variable "mail.identity.id1.fullName", 
-    # the user's email address in the variable "mail.identity.id1.useremail" in 
+    # The user's full name is stored in the variable "mail.identity.idn.fullName", 
+    # the user's email address in the variable "mail.identity.idn.useremail" in 
     # the file "prefs.js" in the user's Thunderbird profile.
+    # Start with "id1". 
     
     user_name = None
     user_email = None
@@ -397,10 +398,14 @@ def read_sender_name_and_email_thunderbird(profile_dir: str) -> typing.Tuple[str
         email_regex_incl = user_name_regex
         # Search the file "prefs.js" for the user's name:
         for i in lines:
-            # TODO: if id1 does not exist, try id2, id3, ...
-            # (could be the case if a user deleted an email account).
-            # Also layer out the code above in function for that:
-            if "mail.identity.id1.fullName" in lines[i]:
+            # If id1 does not exist, try id2, id3, ..., id10
+            # (could e.g. be the case if a user deleted an email account):
+            count: int = 1
+            while count <= 10:
+                if f"mail.identity.id{count}.fullName" in lines[i]:
+                    break
+                count += 1
+            if count <= 10:
                 # A string.endsWith(substring) check would be better, 
                 # but a regular expression should be checked here 
                 # instead of a fixed substring...
@@ -413,8 +418,10 @@ def read_sender_name_and_email_thunderbird(profile_dir: str) -> typing.Tuple[str
                     break # Break the loop since the searched user name was found.
         # Search the file "prefs.js" for the users' email address:
         for i in lines:
-            # TODO: same as above: if id1 does not exist, try id2, id3, ...
-            if "mail.identity.id1.useremail" in lines[i]:
+            # Assuming that e.g. if there exists a user name stored under
+            # "mail.identity.id2.fullName", there is also a corresponding
+            # email address stored under "mail.identity.id2.useremail":
+            if f"mail.identity.id{count}.useremail" in lines[i]:
                 user_email_match = re.search(email_regex_incl, lines[i])
                 if user_email_match:
                     user_email_raw = user_email_match.group()
@@ -523,7 +530,7 @@ def send_email() -> None:
             smtp_server_url, authentication_method = determine_smtp_server(sender_email)
             print(f"smtp_server_url = {smtp_server_url}")
             print(f"authentication_method = {authentication_method}")
-            send_mail_mime(sender_email, smtp_server_url, authentication_method, sender_password, to_email_addresses)
+            #send_mail_mime(sender_email, smtp_server_url, authentication_method, sender_password, to_email_addresses)
 
 
 if __name__ == "__main__":
