@@ -1,13 +1,25 @@
 #!/usr/bin/python
 
 """
-filewriter.py
+"MODIFIED BEER-WARE LICENSE" (Revision 42):
+telekobold <mail@telekobold.de> wrote this file. As long as you 
+retain this notice you can do whatever you want with this stuff within the scope
+of this note. If we meet some day, and you think this stuff is worth it, you can 
+buy me a beer in return. telekobold.
 
-(c) 2022 telekobold <mail@telekobold.de>
+This software was written solely for the joy of exploring how things work
+and the intension of sharing accumulated experiences with others. It shall not
+be used to cause harm to anyone. Please refer to the hacker ethics
+<https://www.ccc.de/en/hackerethics>, especially the point "Don't litter other 
+people's data."
 
-This program was written solely for the joy of exploring how things work
-and the intension of sharing accumulated experiences with others. Please
-do not abuse it to cause any harm!
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+SOFTWARE.
 """
 
 
