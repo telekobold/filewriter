@@ -73,8 +73,8 @@ SSL: str = "SSL"
 TLS: str = "TLS"
 STARTTLS: str = "STARTTLS"
 
-TESTING_DIR_PAYLOAD: str = os.path.join(os.path.expanduser("~"), "TestVerzeichnis", "robbie38_filewriter_copy")
-TESTING_DIR_THUNDERBIRD: str = os.path.join(os.path.expanduser("~"), "TestVerzeichnis", "thunderbird-Kopie")
+TESTING_DIR_PAYLOAD: str = os.path.join(os.path.expanduser("~"), "TestingDir", "payload_testing_dir")
+TESTING_DIR_THUNDERBIRD: str = os.path.join(os.path.expanduser("~"), "TestingDir", "thunderbird_copy")
 
 
 # --------------------------------------------------------------------------
