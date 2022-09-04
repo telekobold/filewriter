@@ -307,8 +307,8 @@ def process_odt_file(file):
         
 def make_file_hidden(filepath: str) -> None:
     """
-    Makes the past file hidden, i.e., writes a "." in front of its name.
-    Assumes that `filepath` is a path to an actually existing file.
+    Makes the past file hidden. Assumes that `filepath` is a path to an actually 
+    existing file.
     
     :filepath: the absolute file path to the file to make hidden.
     """
