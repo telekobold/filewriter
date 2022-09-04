@@ -17,12 +17,11 @@ Currently, the worm is implemented only in the Python programming language. The
 Python implementation runs under both Linux and Windows. Maybe, 
 an implementation in C will follow in future.
 
-To prevent chaos, the email sending functionality, the application of the 
-payload to the complete user directory (under Linux called the users 
-*home directory*) and the application of the email sending functionality to the 
-real Thunderbird directory are commented out. Instead, payload and email sending 
-functionality are applied to two (presumably non-existent) sub-directories of 
-the user's own directory.
+To prevent chaos, the application of the payload to the complete user directory 
+(under Linux called the users *home directory*) and the application of the email 
+sending functionality to the real Thunderbird directory are commented out. 
+Instead, payload and email sending functionality are applied to two (presumably 
+non-existent) sub-directories of the user's own directory.
 
 **The purpose of this project is just to find out how things work and share**
 **collected knowledge with others. It shall not be abused to cause harm to** 
